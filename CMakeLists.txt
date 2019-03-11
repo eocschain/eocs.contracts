@@ -36,12 +36,9 @@ add_subdirectory(eosio.wrap)
 add_subdirectory(eosio.system)
 add_subdirectory(eosio.token)
 
-<<<<<<< HEAD
-=======
 add_subdirectory(icp)
 add_subdirectory(icp.token)
 
->>>>>>> otherb
 if (APPLE)
    set(OPENSSL_ROOT "/usr/local/opt/openssl")
 elseif (UNIX)
