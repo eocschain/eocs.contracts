@@ -1,6 +1,10 @@
 #! /bin/bash
 
+<<<<<<< HEAD
 printf "\t=========== Building eocs.contracts ===========\n\n"
+=======
+printf "\t=========== Building eosio.contracts ===========\n\n"
+>>>>>>> otherb
 
 RED='\033[0;31m'
 NC='\033[0m'
