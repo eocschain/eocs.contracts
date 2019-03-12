@@ -12,7 +12,7 @@
 
 namespace eosio {
 
-struct icp : public contract {
+struct [[eosio::contract("icp")]] icp : public contract {
    explicit icp(name s, name code, datastream<const char*> ds);
 
    [[eosio::action]]
@@ -61,7 +61,7 @@ private:
    void meter_add_packets(uint32_t num);
    void meter_remove_packets(uint32_t num = std::numeric_limits<uint32_t>::max());
 
-   struct [[eosio::table]] icp_meter {
+   struct [[eosio::table("icpmeter"), eosio::contract("icp")]] icp_meter {
        uint32_t max_packets;
        uint32_t current_packets;
    };

@@ -21,7 +21,7 @@ using stored_block_header_ptr = std::shared_ptr<struct stored_block_header>;
 using stored_block_header_state_ptr = std::shared_ptr<struct stored_block_header_state>;
 
 /* Irreversible block header */
-struct [[eosio::table]] stored_block_header {
+struct [[eosio::table, eosio::contract("icp")]] stored_block_header {
     uint64_t pk;
 
     checksum256 id;
@@ -49,7 +49,7 @@ typedef multi_index<"block"_n, stored_block_header,
 > stored_block_header_table;
 
 /* Block header state */
-struct [[eosio::table]] stored_block_header_state {
+struct [[eosio::table, eosio::contract("icp")]] stored_block_header_state {
     uint64_t pk;
 
     checksum256 id;
@@ -82,19 +82,19 @@ typedef multi_index<"blockstate"_n, stored_block_header_state,
         indexed_by<"libblocknum"_n, const_mem_fun<stored_block_header_state, uint128_t, &stored_block_header_state::by_lib_block_num>>
 > stored_block_header_state_table;
 
-struct [[eosio::table]] stored_producer_schedule {
+struct [[eosio::table("activesched"), eosio::contract("icp")]] stored_producer_schedule {
    bytes producer_schedule;
 };
 typedef singleton<"activesched"_n, stored_producer_schedule> producer_schedule_singleton;
 
-struct [[eosio::table]] pending_schedule {
+struct [[eosio::table("pendingsched"), eosio::contract("icp")]] pending_schedule {
    uint32_t pending_schedule_lib_num; // TODO
    checksum256 pending_schedule_hash; // TODO
    bytes pending_schedule;
 };
 typedef singleton<"pendingsched"_n, pending_schedule> pending_schedule_singleton;
 
-struct [[eosio::table]] store_meter {
+struct [[eosio::table("storemeter"), eosio::contract("icp")]] store_meter {
    uint32_t max_blocks;
    uint32_t current_blocks;
 };

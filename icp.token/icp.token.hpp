@@ -10,7 +10,7 @@ namespace icp {
    using namespace std;
    using namespace eosio;
 
-   class token : public contract {
+   class [[eosio::contract("icp.token")]] token : public contract {
    public:
       token(name s, name code, datastream<const char*> ds);
 
@@ -83,7 +83,7 @@ namespace icp {
        * @param icp - the base icp contract on local chain
        * @param peer - the icp.token contract on peer chain
        */
-      struct [[eosio::table]] collaborative_contract {
+      struct [[eosio::table("co"), eosio::contract("icp.token")]] collaborative_contract {
          name icp = name();
          name peer = name();
       };
@@ -93,7 +93,7 @@ namespace icp {
        * @param account - the owner
        * @param balance - the asset balance
        */
-      struct [[eosio::table]] account {
+      struct [[eosio::table, eosio::contract("icp.token")]] account {
          uint64_t pk;
          name account;
          asset    balance;
@@ -106,7 +106,7 @@ namespace icp {
        * @param scope - the token contract from peer chain
        * @param supply - the asset stats
        */
-      struct [[eosio::table]] account_stats {
+      struct [[eosio::table, eosio::contract("icp.token")]] account_stats {
          asset supply;
 
          uint64_t primary_key()const { return supply.symbol.code().raw(); }
@@ -117,7 +117,7 @@ namespace icp {
        * @param account - the owner
        * @param balance - the transferred asset
        */
-      struct [[eosio::table]] account_deposit {
+      struct [[eosio::table, eosio::contract("icp.token")]] account_deposit {
          uint64_t pk;
          name account;
          asset balance;
@@ -135,7 +135,7 @@ namespace icp {
        * @param account - the sender
        * @param balance - the transferred asset
        */
-      struct [[eosio::table]] account_locked {
+      struct [[eosio::table, eosio::contract("icp.token")]] account_locked {
          uint64_t seq;
          name contract;
          name account;

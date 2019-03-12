@@ -1,8 +1,8 @@
 #pragma once
 
+#include <optional>
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/time.hpp>
-#include <eosiolib/optional.hpp>
 #include <eosiolib/producer_schedule.hpp>
 #include <eosiolib/transaction.hpp>
 #include <eosiolib/icp.hpp>
@@ -57,7 +57,7 @@ struct block_header {
     checksum256 action_mroot; // merkle root of actions
 
     uint32_t schedule_version; // new version of proposed producer set
-    optional<producer_schedule> new_producers; // new proposed producer set
+    std::optional<producer_schedule> new_producers; // new proposed producer set
 
     extensions_type header_extensions;
 
@@ -179,8 +179,7 @@ struct action_receipt {
    EOSLIB_SERIALIZE(action_receipt, (receiver)(act_digest)(global_sequence)(recv_sequence)(auth_sequence)(code_sequence)(abi_sequence))
 };
 
-// @abi table icpaction i64
-struct [[eosio::action]] icpaction {
+struct icpaction {
    bytes action;
    bytes action_receipt;
    checksum256 block_id;
@@ -190,7 +189,7 @@ struct [[eosio::action]] icpaction {
    EOSLIB_SERIALIZE(icpaction, (action)(action_receipt)(block_id)(merkle_path))
 };
 
-struct [[eosio::table]] icp_packet {
+struct [[eosio::table, eosio::contract("icp")]] icp_packet {
     uint64_t seq; // strictly increasing sequence
     // name from; // the icp sender on the source chain
     // name to; // the icp receiver on the destination chain
@@ -204,7 +203,7 @@ struct [[eosio::table]] icp_packet {
     uint64_t primary_key() const { return seq; }
 };
 
-struct [[eosio::table]] icp_receipt {
+struct [[eosio::table, eosio::contract("icp")]] icp_receipt {
     uint64_t seq; // strictly increasing sequence
     uint64_t pseq; // sequence of the corresponding icp_packet
     // name from; // corresponding to the icp receiver of the icp_packet on the destination chain

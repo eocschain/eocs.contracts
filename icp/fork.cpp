@@ -42,7 +42,7 @@ void fork_store::validate_block_state(const block_header_state& h) {
     eosio_assert(h.calc_dpos_last_irreversible() == h.dpos_irreversible_blocknum, "invalid dpos irreversible block num");
 
     // If new pending schedule comes in, remember it
-    if (h.header.new_producers.valid()) {
+    if (h.header.new_producers.has_value()) {
         eosio_assert(h.header.new_producers->version == h.active_schedule.version + 1, "wrong producer schedule version specified");
         eosio_assert(h.pending_schedule_hash == sha256(*h.header.new_producers), "invalid new producers");
         eosio_assert(h.pending_schedule_hash == sha256(h.pending_schedule), "invalid new producers");
