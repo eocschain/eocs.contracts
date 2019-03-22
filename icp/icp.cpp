@@ -56,7 +56,7 @@ void icp::openchannel(const bytes &data) {
 void icp::closechannel(uint8_t clear_all, uint32_t max_num) {
    require_auth(_self);
 
-   if (max_num == 0) max_num = std::numeric_limits<uint32_t>::max()
+   if (max_num == 0) max_num = std::numeric_limits<uint32_t>::max();
    packet_table packets(_self, _self.value);
    receipt_table receipts(_self, _self.value);
 
@@ -301,10 +301,10 @@ uint64_t icp::next_packet_seq() const {
 
 void remove_head_4bytes(bytes& todata)
 {
-   if( fromdata.size() <= 4){
+   if( todata.size() <= 4){
       return;
    }
-   bytes* beginaddr = todata.data();
+   char* beginaddr = todata.data();
    memset(beginaddr,0,todata.size());
    memmove(beginaddr,beginaddr+4,todata.size()-4);
 }
