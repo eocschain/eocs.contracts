@@ -47,6 +47,7 @@ struct [[eosio::contract("icp")]] icp : public contract {
    void cleanup(uint32_t max_num);
 
    uint64_t next_packet_seq() const;
+   void remove_head_4bytes( bytes& todata);
 
 private:
    enum class incoming_type : uint8_t {
