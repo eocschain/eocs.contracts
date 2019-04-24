@@ -582,6 +582,15 @@ namespace eosiosystem {
          [[eosio::action]]
          void bidrefund( name bidder, name newname );
 
+         /**
+          * Set Minimal Resource Security (MRS) parameters.
+          * @param cpu_us
+          * @param net_bytes
+          * @param ram_bytes
+          */
+	[[eosio::action]]
+	void setmrs(int64_t cpu_us, int64_t net_bytes, int64_t ram_bytes);
+
          using init_action = eosio::action_wrapper<"init"_n, &system_contract::init>;
          using setacctram_action = eosio::action_wrapper<"setacctram"_n, &system_contract::setacctram>;
          using setacctnet_action = eosio::action_wrapper<"setacctnet"_n, &system_contract::setacctnet>;
@@ -625,6 +634,7 @@ namespace eosiosystem {
          using setpriv_action = eosio::action_wrapper<"setpriv"_n, &system_contract::setpriv>;
          using setalimits_action = eosio::action_wrapper<"setalimits"_n, &system_contract::setalimits>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
+         using setmrs_action = eosio::action_wrapper<"setmrs"_n, &system_contract::setmrs>;
 
       private:
 

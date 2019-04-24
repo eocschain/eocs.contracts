@@ -369,6 +369,11 @@ namespace eosiosystem {
       refunds_table.erase( it );
    }
 
+   void system_contract::setmrs( int64_t cpu_us, int64_t net_bytes, int64_t ram_bytes){
+      require_auth(_self);
+      set_minimum_resource_security(ram_bytes, net_bytes, cpu_us);
+   }
+
    /**
     *  Called after a new account is created. This code enforces resource-limits rules
     *  for new accounts as well as new account naming conventions.
@@ -464,7 +469,7 @@ EOSIO_DISPATCH( eosiosystem::system_contract,
      (newaccount)(updateauth)(deleteauth)(linkauth)(unlinkauth)(canceldelay)(onerror)(setabi)
      // eosio.system.cpp
      (init)(setram)(setramrate)(setparams)(setpriv)(setalimits)(setacctram)(setacctnet)(setacctcpu)
-     (rmvproducer)(updtrevision)(bidname)(bidrefund)
+     (rmvproducer)(updtrevision)(bidname)(bidrefund)(setmrs)
      // rex.cpp
      (deposit)(withdraw)(buyrex)(unstaketorex)(sellrex)(cnclrexorder)(rentcpu)(rentnet)(fundcpuloan)(fundnetloan)
      (defcpuloan)(defnetloan)(updaterex)(consolidate)(mvtosavings)(mvfrsavings)(setrex)(rexexec)(closerex)
