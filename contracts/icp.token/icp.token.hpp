@@ -50,7 +50,7 @@ namespace icp {
        * @param quantity
        * @param memo
        */
-      void icp_transfer_or_deposit(name from, name to, asset quantity, string memo);
+      void icp_transfer_or_deposit(name contract,name from, name to, asset quantity, string memo);
 
       /** Transfer asset with icp.
        * The asset must have been deposited by `icp_transfer_or_deposit`.

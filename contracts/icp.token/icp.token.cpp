@@ -124,7 +124,7 @@ namespace icp {
       icp_transfer(contract, from, icp_to, quantity, std::move(memo), expiration, false); // TODO: original memo?
    }
 
-   void token::icp_transfer_or_deposit(name from, name to, asset quantity, string memo) {
+   void token::icp_transfer_or_deposit(name contract,name from, name to, asset quantity, string memo) {
       // only care about token receiving
       print("icp_transfer_or_deposit");
       if (to != _self) {
@@ -141,11 +141,11 @@ namespace icp {
          auto icp_expiration = static_cast<uint32_t>(std::stoul(h));
 
          // TODO: auth `from`
-         icp_transfer(get_code(), from, icp_to, quantity, memo, icp_expiration, false); // TODO: original memo?
+         icp_transfer(contract, from, icp_to, quantity, memo, icp_expiration, false); // TODO: original memo?
 
       } else { // deposit
          print("deposit");
-         deposits dps(_self, get_code().value);
+         deposits dps(_self, contract.value);
          auto by_account_asset = dps.get_index<"accountasset"_n>();
          auto it = by_account_asset.find(account_asset_key(from, quantity));
          if (it == by_account_asset.end()) {
@@ -223,7 +223,21 @@ extern "C" {
          }
       }
       if (code != self && action == "transfer"_n.value) {
-         eosio::execute_action(eosio::name(self), eosio::name(code), &icp::token::icp_transfer_or_deposit);
+         //eosio::execute_action(eosio::name(self), eosio::name(code), &icp::token::icp_transfer_or_deposit);
+	 constexpr size_t max_stack_buffer_size = 512;
+         size_t size = action_data_size();
+         void* buffer = max_stack_buffer_size < size ? malloc(size) : alloca(size);
+         read_action_data( buffer, size );
+         icp::transfer_args args;
+         eosio::datastream<const char*> ds((char*)buffer, size);
+         ds >> args;
+
+         icp::token thiscontract(eosio::name(self), eosio::name(code), ds);
+         thiscontract.icp_transfer_or_deposit(eosio::name(code), args.from, args.to, args.quantity, args.memo);
+
+         if ( max_stack_buffer_size < size ) {
+            free(buffer);
+         }
       }
    }
 }
