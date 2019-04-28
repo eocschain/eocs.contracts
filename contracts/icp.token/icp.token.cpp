@@ -124,7 +124,7 @@ namespace icp {
       icp_transfer(contract, from, icp_to, quantity, std::move(memo), expiration, false); // TODO: original memo?
    }
 
-   void token::icp_transfer_or_deposit(name contract, name from, name to, asset quantity, string memo) {
+   void token::icp_transfer_or_deposit(name from, name to, asset quantity, string memo) {
       // only care about token receiving
       print("icp_transfer_or_deposit");
       if (to != _self) {
@@ -141,11 +141,11 @@ namespace icp {
          auto icp_expiration = static_cast<uint32_t>(std::stoul(h));
 
          // TODO: auth `from`
-         icp_transfer(contract, from, icp_to, quantity, memo, icp_expiration, false); // TODO: original memo?
+         icp_transfer(get_code(), from, icp_to, quantity, memo, icp_expiration, false); // TODO: original memo?
 
       } else { // deposit
          print("deposit");
-         deposits dps(_self, contract.value);
+         deposits dps(_self, get_code().value);
          auto by_account_asset = dps.get_index<"accountasset"_n>();
          auto it = by_account_asset.find(account_asset_key(from, quantity));
          if (it == by_account_asset.end()) {
