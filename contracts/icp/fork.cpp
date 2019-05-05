@@ -23,37 +23,37 @@ void fork_store::validate_block_state(const block_header_state& h) {
     h.validate();
 
     auto by_blockid = _block_states.get_index<"blockid"_n>();
-    eosio_assert(by_blockid.find(to_key256(h.id)) == by_blockid.end(), "already existing block");
+    check(by_blockid.find(to_key256(h.id)) == by_blockid.end(), "already existing block");
 
     // Comment out, since producer may not be found when schedule changed
-    // eosio_assert(is_producer(h.header.producer, h.block_signing_key), "invalid producer");
+    // check(is_producer(h.header.producer, h.block_signing_key), "invalid producer");
 
     auto previous_block_num = block_header::num_from_id(h.header.previous);
-    eosio_assert(previous_block_num + 1 == h.block_num, "unlinkable block");
+    check(previous_block_num + 1 == h.block_num, "unlinkable block");
 
     auto prokey = h.get_scheduled_producer(h.header.timestamp);
-    eosio_assert(prokey.producer_name == h.header.producer, "invalid producer name");
-    eosio_assert(prokey.block_signing_key == h.block_signing_key, "invalid producer key");
+    check(prokey.producer_name == h.header.producer, "invalid producer name");
+    check(prokey.block_signing_key == h.block_signing_key, "invalid producer key");
     auto iter = std::find_if(h.active_schedule.producers.cbegin(), h.active_schedule.producers.cend(), [&](const producer_key& p) {
        return p.producer_name == h.header.producer;
     });
-    eosio_assert(iter != h.active_schedule.producers.cend(), "producer not found in active schedule");
+    check(iter != h.active_schedule.producers.cend(), "producer not found in active schedule");
 
-    eosio_assert(h.calc_dpos_last_irreversible() == h.dpos_irreversible_blocknum, "invalid dpos irreversible block num");
+    check(h.calc_dpos_last_irreversible() == h.dpos_irreversible_blocknum, "invalid dpos irreversible block num");
 
     // If new pending schedule comes in, remember it
     if (h.header.new_producers.has_value()) {
-        eosio_assert(h.header.new_producers->version == h.active_schedule.version + 1, "wrong producer schedule version specified");
-        eosio_assert(h.pending_schedule_hash == sha256(*h.header.new_producers), "invalid new producers");
-        eosio_assert(h.pending_schedule_hash == sha256(h.pending_schedule), "invalid new producers");
-        eosio_assert(h.pending_schedule_lib_num == h.block_num, "invalid pending schedule lib num");
+        check(h.header.new_producers->version == h.active_schedule.version + 1, "wrong producer schedule version specified");
+        check(h.pending_schedule_hash == sha256(*h.header.new_producers), "invalid new producers");
+        check(h.pending_schedule_hash == sha256(h.pending_schedule), "invalid new producers");
+        check(h.pending_schedule_lib_num == h.block_num, "invalid pending schedule lib num");
 
         set_pending_schedule(h.pending_schedule_lib_num, h.pending_schedule_hash, h.pending_schedule);
     }
 }
 
 void fork_store::init_seed_block(const block_header_state& block_state) {
-    eosio_assert(_block_states.begin() == _block_states.end(), "already seeded");
+    check(_block_states.begin() == _block_states.end(), "already seeded");
 
     update_active_schedule(block_state.active_schedule, false);
     validate_block_state(block_state);
@@ -87,13 +87,13 @@ void fork_store::add_block_header_with_merkle_path(const block_header_state& h, 
     if (producer_scheduler_changed) {
         auto p = _pending_schedule.get();
         auto pending_schedule = unpack<producer_schedule>(p.pending_schedule);
-        eosio_assert(sha256(h.active_schedule) == sha256(pending_schedule), "mismatched schedule");
+        check(sha256(h.active_schedule) == sha256(pending_schedule), "mismatched schedule");
 
-        eosio_assert(h.pending_schedule_hash == sha256(h.active_schedule), "invalid new producers");
-        eosio_assert(h.active_schedule.version == h.pending_schedule.version, "inconsistent producer schedule version");
-        eosio_assert(current_producer_schedule.version + 1 == h.pending_schedule.version, "invalid producer schedule version");
-        eosio_assert(h.dpos_irreversible_blocknum >= h.pending_schedule_lib_num, "changed producer schedule before irreversible");
-        eosio_assert(h.dpos_irreversible_blocknum <= h.pending_schedule_lib_num + 12, "changed producer schedule too late"); // TODO: 12?
+        check(h.pending_schedule_hash == sha256(h.active_schedule), "invalid new producers");
+        check(h.active_schedule.version == h.pending_schedule.version, "inconsistent producer schedule version");
+        check(current_producer_schedule.version + 1 == h.pending_schedule.version, "invalid producer schedule version");
+        check(h.dpos_irreversible_blocknum >= h.pending_schedule_lib_num, "changed producer schedule before irreversible");
+        check(h.dpos_irreversible_blocknum <= h.pending_schedule_lib_num + 12, "changed producer schedule too late"); // TODO: 12?
 
         update_active_schedule(h.active_schedule);
     }
@@ -112,14 +112,14 @@ void fork_store::add_block_header_with_merkle_path(const block_header_state& h, 
         meter_add_blocks(merkle_path.size() - 1);
     }
     // mroot.append(h.id); // last
-    eosio_assert(h.blockroot_merkle.get_root() == mroot.get_root(), "unlinkable block");
+    check(h.blockroot_merkle.get_root() == mroot.get_root(), "unlinkable block");
 
     add_block_state(h);
 }
 
 void fork_store::add_block_state(const block_header_state& block_state) {
     auto by_blockid = _block_states.get_index<"blockid"_n>();
-    eosio_assert(by_blockid.find(to_key256(block_state.id)) == by_blockid.end(), "already existing block");
+    check(by_blockid.find(to_key256(block_state.id)) == by_blockid.end(), "already existing block");
 
     meter_add_blocks(1);
 
@@ -182,7 +182,7 @@ void fork_store::prune(const stored_block_header_state& block_state) {
 void fork_store::cutdown(uint32_t block_num, uint32_t& max_num) {
     auto head = *_block_states.get_index<"libblocknum"_n>().begin();
     auto lib = head.last_irreversible_blocknum();
-    eosio_assert(block_num <= lib, "block number not irreversible");
+    check(block_num <= lib, "block number not irreversible");
     if (block_num == lib) block_num = lib - 1; // retain the lib for query convenience
 
     {
@@ -250,8 +250,8 @@ void fork_store::remove(const capi_checksum256& id) {
 void fork_store::add_block_header(const block_header& h) {
     auto by_blockid = _blocks.get_index<"blockid"_n>();
     auto b = by_blockid.find(to_key256(h.id()));
-    eosio_assert(b != by_blockid.end(), "missing block");
-    eosio_assert(!b->has_action_mroot(), "already complete block");
+    check(b != by_blockid.end(), "missing block");
+    check(!b->has_action_mroot(), "already complete block");
     by_blockid.modify(b, same_payer, [&](auto& o) {
         o.action_mroot = h.action_mroot; // TODO: assignment
     });
@@ -259,7 +259,7 @@ void fork_store::add_block_header(const block_header& h) {
 
 /* void fork_store::add_block_id(const capi_checksum256& block_id, const capi_checksum256& previous) {
     auto by_blockid = _blocks.get_index<"blockid"_n>();
-    eosio_assert(by_blockid.find(to_key256(block_id)) == by_blockid.end(), "already existing block");
+    check(by_blockid.find(to_key256(block_id)) == by_blockid.end(), "already existing block");
 
     _blocks.emplace(_code, [&](auto& o) {
         o.pk = _blocks.available_primary_key();
@@ -310,10 +310,10 @@ incremental_merkle fork_store::get_block_mroot(const capi_checksum256& block_id)
 capi_checksum256 fork_store::get_action_mroot(const capi_checksum256& block_id) {
     auto by_blockid = _blocks.get_index<"blockid"_n>();
     auto b = by_blockid.get(to_key256(block_id), "by_blockid unable to get");
-    eosio_assert(b.has_action_mroot(), "incomplete block");
+    check(b.has_action_mroot(), "incomplete block");
 
     auto head = *_block_states.get_index<"libblocknum"_n>().begin();
-    eosio_assert(b.block_num <= head.last_irreversible_blocknum(), "block number not irreversible");
+    check(b.block_num <= head.last_irreversible_blocknum(), "block number not irreversible");
 
     return b.action_mroot;
 }
@@ -322,7 +322,7 @@ void fork_store::meter_add_blocks(uint32_t num) {
     if (num <= 0) return;
     auto meter = _store_meter.get();
     meter.current_blocks += num;
-    eosio_assert(meter.current_blocks <= meter.max_blocks, "exceed max blocks");
+    check(meter.current_blocks <= meter.max_blocks, "exceed max blocks");
     _store_meter.set(meter, _code);
 }
 

@@ -19,13 +19,21 @@ void token::create( name   issuer,
 
     stats statstable( _self, sym.code().raw() );
     auto existing = statstable.find( sym.code().raw() );
-    check( existing == statstable.end(), "token with symbol already exists" );
 
-    statstable.emplace( _self, [&]( auto& s ) {
-       s.supply.symbol = maximum_supply.symbol;
-       s.max_supply    = maximum_supply;
-       s.issuer        = issuer;
-    });
+    if (existing == statstable.end()) {
+       statstable.emplace( _self, [&]( auto& s ) {
+          s.supply.symbol = maximum_supply.symbol;
+          s.max_supply    = maximum_supply;
+          s.issuer        = issuer;
+       });
+    } else { // modify max-supply
+       check( existing->issuer == issuer, "issuer mismatch" );
+       check( maximum_supply >= existing->supply, "max-supply must be >= supply" );
+
+       statstable.modify( existing, same_payer, [&]( auto& s ) {
+          s.max_supply = maximum_supply;
+       });
+    }
 }
 
 

@@ -31,7 +31,7 @@ namespace eosio {
       auto d = sig_digest();
       assert_recover_key(checksum256{d.hash}, header.producer_signature, block_signing_key);
 
-      eosio_assert(header.id() == id, "invalid block id"); // TODO: necessary?
+      check(header.id() == id, "invalid block id"); // TODO: necessary?
    }
 
    producer_key block_header_state::get_scheduled_producer(block_timestamp_type t)const {
@@ -58,7 +58,7 @@ namespace eosio {
       for (const auto& n: merkle_path) {
          merkle.append(n);
       }
-      eosio_assert(merkle.get_root() == root, "invalid block merkle path");
+      check(merkle.get_root() == root, "invalid block merkle path");
    } */
 
 }

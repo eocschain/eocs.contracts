@@ -4,16 +4,16 @@
 
 namespace eosiosystem {
 
-   const int64_t  min_pervote_daily_pay = 100'0000;
-   const int64_t  min_activated_stake   = 150'000'000'0000;
-   const double   continuous_rate       = 0.04879;          // 5% annual rate
-   const double   perblock_rate         = 0.0025;           // 0.25%
-   const double   standby_rate          = 0.0075;           // 0.75%
+   // const int64_t  min_pervote_daily_pay = 100'0000;
+   // const int64_t  min_activated_stake   = 150'000'000'0000;
+   // const double   continuous_rate       = 0.04879;          // 5% annual rate
+   // const double   perblock_rate         = 0.0025;           // 0.25%
+   // const double   standby_rate          = 0.0075;           // 0.75%
    const uint32_t blocks_per_year       = 52*7*24*2*3600;   // half seconds per year
    const uint32_t seconds_per_year      = 52*7*24*3600;
    const uint32_t blocks_per_day        = 2 * 24 * 3600;
    const uint32_t blocks_per_hour       = 2 * 3600;
-   const int64_t  useconds_per_day      = 24 * 3600 * int64_t(1000000);
+   // const int64_t  useconds_per_day      = 24 * 3600 * int64_t(1000000);
    const int64_t  useconds_per_year     = seconds_per_year*1000000ll;
 
    void system_contract::onblock( ignore<block_header> ) {
@@ -31,7 +31,7 @@ namespace eosiosystem {
       _gstate2.last_block_num = timestamp;
 
       /** until activated stake crosses this threshold no new rewards are paid */
-      if( _gstate.total_activated_stake < min_activated_stake )
+      if( _gstate.total_activated_stake < _gstate.min_activated_stake )
          return;
 
       if( _gstate.last_pervote_bucket_fill == time_point() )  /// start the presses
@@ -60,9 +60,9 @@ namespace eosiosystem {
             auto highest = idx.lower_bound( std::numeric_limits<uint64_t>::max()/2 );
             if( highest != idx.end() &&
                 highest->high_bid > 0 &&
-                (current_time_point() - highest->last_bid_time) > microseconds(useconds_per_day) &&
+                (current_time_point() - highest->last_bid_time) > microseconds(_gstate.useconds_per_day) &&
                 _gstate.thresh_activated_stake_time > time_point() &&
-                (current_time_point() - _gstate.thresh_activated_stake_time) > microseconds(14 * useconds_per_day)
+                (current_time_point() - _gstate.thresh_activated_stake_time) > microseconds(14 * _gstate.useconds_per_day)
             ) {
                _gstate.last_name_close = timestamp;
                channel_namebid_to_rex( highest->high_bid );
@@ -81,22 +81,22 @@ namespace eosiosystem {
       const auto& prod = _producers.get( owner.value );
       check( prod.active(), "producer does not have an active key" );
 
-      check( _gstate.total_activated_stake >= min_activated_stake,
+      check( _gstate.total_activated_stake >= _gstate.min_activated_stake,
                     "cannot claim rewards until the chain is activated (at least 15% of all tokens participate in voting)" );
 
       const auto ct = current_time_point();
 
-      check( ct - prod.last_claim_time > microseconds(useconds_per_day), "already claimed rewards within past day" );
+      check( ct - prod.last_claim_time > microseconds(_gstate.useconds_per_day), "already claimed rewards within past day" );
 
       const asset token_supply   = eosio::token::get_supply(token_account, core_symbol().code() );
       const auto usecs_since_last_fill = (ct - _gstate.last_pervote_bucket_fill).count();
 
       if( usecs_since_last_fill > 0 && _gstate.last_pervote_bucket_fill > time_point() ) {
-         auto new_tokens = static_cast<int64_t>( (continuous_rate * double(token_supply.amount) * double(usecs_since_last_fill)) / double(useconds_per_year) );
+         auto new_tokens = static_cast<int64_t>( (_gstate.continuous_rate * double(token_supply.amount) * double(usecs_since_last_fill)) / double(useconds_per_year) );
 
-         auto to_producers     = new_tokens / 5;
+         auto to_producers      = static_cast<int64_t>( new_tokens * _gstate.to_producers_rate );
          auto to_savings       = new_tokens - to_producers;
-         auto to_per_block_pay = to_producers / 4;
+         auto to_per_block_pay   = static_cast<int64_t>( to_producers * _gstate.to_bpay_rate );
          auto to_per_vote_pay  = to_producers - to_per_block_pay;
 
          INLINE_ACTION_SENDER(eosio::token, issue)(
@@ -128,7 +128,7 @@ namespace eosiosystem {
 
       /// New metric to be used in pervote pay calculation. Instead of vote weight ratio, we combine vote weight and
       /// time duration the vote weight has been held into one metric.
-      const auto last_claim_plus_3days = prod.last_claim_time + microseconds(3 * useconds_per_day);
+      const auto last_claim_plus_3days = prod.last_claim_time + microseconds(3 * _gstate.useconds_per_day);
 
       bool crossed_threshold       = (last_claim_plus_3days <= ct);
       bool updated_after_threshold = true;
@@ -171,7 +171,7 @@ namespace eosiosystem {
          }
       }
 
-      if( producer_per_vote_pay < min_pervote_daily_pay ) {
+      if( producer_per_vote_pay < _gstate.min_pervote_daily_pay ) {
          producer_per_vote_pay = 0;
       }
 
@@ -193,9 +193,76 @@ namespace eosiosystem {
          );
       }
       if( producer_per_vote_pay > 0 ) {
+         if (_gstate.to_voter_bonus_rate > 0) {
+            auto voter_bonus_pay = static_cast<int64_t>(producer_per_vote_pay * _gstate.to_voter_bonus_rate);
+            if (voter_bonus_pay > 0) {
+               producer_per_vote_pay -= voter_bonus_pay;
+
+               auto vb_itr = _voterbonus.find(owner.value);
+               if (vb_itr == _voterbonus.end()) {
+                  _voterbonus.emplace( owner, [&]( auto& vb ) {
+                     vb.producer = owner;
+                     vb.balance = asset(voter_bonus_pay, core_symbol());
+                  });
+               } else {
+                  _voterbonus.modify( vb_itr, same_payer, [&]( auto& vb ) {
+                      vb.balance += asset(voter_bonus_pay, core_symbol());
+                  });
+               }
+            }
+         }
+
+         if (producer_per_vote_pay > 0) {
+            INLINE_ACTION_SENDER(eosio::token, transfer)(
+               token_account, { {vpay_account, active_permission}, {owner, active_permission} },
+               { vpay_account, owner, asset(producer_per_vote_pay, core_symbol()), std::string("producer vote pay") }
+            );
+         }
+      }
+   }
+
+   void system_contract::claimbonus( const name owner ) {
+      require_auth(owner);
+
+      const auto& voter = _voters.get(owner.value);
+
+      const auto ct = current_time_point();
+      check( ct - voter.last_change_time > microseconds(_gstate.useconds_per_day), "already claimed bonus or voted producers or delegated/undelegated within past day" );
+
+      double vote_weight = voter.last_vote_weight;
+      if (voter.is_proxy) {
+         vote_weight -= voter.proxied_vote_weight;
+      }
+
+      std::vector<name> producers;
+      if (voter.proxy) {
+         const auto& proxy = _voters.get(voter.proxy.value);
+         producers = proxy.producers;
+         // TODO: should consider proxy's last_change_time?
+      } else {
+         producers = voter.producers;
+      }
+
+      _voters.modify( voter, same_payer, [&]( auto& v ) {
+         v.last_change_time = ct;
+      });
+
+      int64_t amount = 0;
+      for (auto& p: producers) {
+         const auto& producer = _producers.get(p.value);
+         const auto& voterbonus = _voterbonus.find(p.value);
+         if (voterbonus == _voterbonus.end()) continue;
+         auto delta = static_cast<int64_t>(voterbonus->balance.amount * vote_weight / producer.total_votes);
+         if (delta <= 0) continue;
+         _voterbonus.modify( *voterbonus, same_payer, [&]( auto& vb ) {
+             vb.balance -= asset(delta, core_symbol());
+         });
+         amount += delta;
+      }
+      if (amount > 0) {
          INLINE_ACTION_SENDER(eosio::token, transfer)(
-            token_account, { {vpay_account, active_permission}, {owner, active_permission} },
-            { vpay_account, owner, asset(producer_per_vote_pay, core_symbol()), std::string("producer vote pay") }
+            token_account, {{vpay_account, active_permission}, {owner,active_permission}},
+            {vpay_account, owner, asset(amount, core_symbol()), std::string("voter bonus pay")}
          );
       }
    }

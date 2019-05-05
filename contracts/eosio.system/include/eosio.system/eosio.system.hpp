@@ -99,12 +99,27 @@ namespace eosiosystem {
       double               total_producer_vote_weight = 0; /// the sum of all producer votes
       block_timestamp      last_name_close;
 
+      uint8_t              max_producer_schedule_size = 21;
+      int64_t              min_pervote_daily_pay      = 100'0000;
+      int64_t              min_activated_stake        = 150'000'000'0000;
+      int64_t              useconds_per_day           = 24 * 3600 * int64_t(1000000); // redefine meaning of `day` to regulate something
+      double              continuous_rate            = 0.04879; // 5% annual rate
+      double              to_producers_rate          = 0.2;
+      double              to_bpay_rate               = 0.25; // producer block pay rate with regard to producers pay
+      double              to_voter_bonus_rate        = 0; // voter bonus rate with regard to producer voting pay
+      uint32_t             refund_delay_sec           = 3*24*3600;
+      int64_t              ram_gift_bytes             = 1400;
+
       // explicit serialization macro is not necessary, used here only to improve compilation time
       EOSLIB_SERIALIZE_DERIVED( eosio_global_state, eosio::blockchain_parameters,
                                 (max_ram_size)(total_ram_bytes_reserved)(total_ram_stake)
                                 (last_producer_schedule_update)(last_pervote_bucket_fill)
                                 (pervote_bucket)(perblock_bucket)(total_unpaid_blocks)(total_activated_stake)(thresh_activated_stake_time)
-                                (last_producer_schedule_size)(total_producer_vote_weight)(last_name_close) )
+                                (last_producer_schedule_size)(total_producer_vote_weight)(last_name_close)
+                                (max_producer_schedule_size)(min_pervote_daily_pay)(min_activated_stake)
+                                (useconds_per_day)(continuous_rate)
+                                (to_producers_rate)(to_bpay_rate)(to_voter_bonus_rate)
+                                (refund_delay_sec)(ram_gift_bytes) )
    };
 
    /**
@@ -182,6 +197,7 @@ namespace eosiosystem {
       double              proxied_vote_weight= 0; /// the total vote weight delegated to this voter as a proxy
       bool                is_proxy = 0; /// whether the voter is a proxy for others
 
+      time_point          last_change_time;
 
       uint32_t            flags1 = 0;
       uint32_t            reserved2 = 0;
@@ -196,11 +212,21 @@ namespace eosiosystem {
       };
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( voter_info, (owner)(proxy)(producers)(staked)(last_vote_weight)(proxied_vote_weight)(is_proxy)(flags1)(reserved2)(reserved3) )
+      EOSLIB_SERIALIZE( voter_info, (owner)(proxy)(producers)(staked)(last_vote_weight)(proxied_vote_weight)(is_proxy)(last_change_time)(flags1)(reserved2)(reserved3) )
+   };
+
+   struct [[eosio::table, eosio::contract("eosio.system")]] voter_bonus {
+       name producer;
+       eosio::asset balance;
+
+       uint64_t primary_key()const { return producer.value; }
+
+       EOSLIB_SERIALIZE( voter_bonus, (producer)(balance))
    };
 
    typedef eosio::multi_index< "voters"_n, voter_info >  voters_table;
 
+   typedef eosio::multi_index< "voterbonus"_n, voter_bonus > voter_bonus_table;
 
    typedef eosio::multi_index< "producers"_n, producer_info,
                                indexed_by<"prototalvote"_n, const_mem_fun<producer_info, double, &producer_info::by_votes>  >
@@ -303,6 +329,7 @@ namespace eosiosystem {
 
       private:
          voters_table            _voters;
+         voter_bonus_table       _voterbonus;
          producers_table         _producers;
          producers_table2        _producers2;
          global_state_singleton  _global;
@@ -484,7 +511,7 @@ namespace eosiosystem {
          
          /**
           * Moves a specified amount of REX out of savings bucket. The moved amount
-          * will have the regular REX maturity period of 4 days.  
+          * will have the regular REX maturity period of 4 days.
           */
          [[eosio::action]]
          void mvfrsavings( const name& owner, const asset& rex );
@@ -568,6 +595,9 @@ namespace eosiosystem {
          void claimrewards( const name owner );
 
          [[eosio::action]]
+         void claimbonus( const name owner );
+
+         [[eosio::action]]
          void setpriv( name account, uint8_t is_priv );
 
          [[eosio::action]]
@@ -582,14 +612,33 @@ namespace eosiosystem {
          [[eosio::action]]
          void bidrefund( name bidder, name newname );
 
+         [[eosio::action]]
+         void setglobal( std::string name, std::string value );
+
          /**
           * Set Minimal Resource Security (MRS) parameters.
           * @param cpu_us
           * @param net_bytes
           * @param ram_bytes
           */
-	[[eosio::action]]
-	void setmrs(int64_t cpu_us, int64_t net_bytes, int64_t ram_bytes);
+         [[eosio::action]]
+         void setmrs(int64_t cpu_us, int64_t net_bytes, int64_t ram_bytes);
+
+         /**
+          * Update black & white list
+          * @param type: target type.
+          *              0: sender_bypass_whiteblacklist
+          *              1: actor_whitelist
+          *              2: actor_blacklist
+          *              3: contract_whitelist
+          *              4: contract_blacklist
+          *              5: action_blacklist (item must be formatted as <contract>:<action>)
+          *              6: key_blacklist (item must be public key)
+          * @param add: items to add
+          * @param rmv: items to remove
+          */
+         [[eosio::action]]
+         void updtbwlist(uint8_t type, const std::vector<std::string>& add, const std::vector<std::string>& rmv);
 
          using init_action = eosio::action_wrapper<"init"_n, &system_contract::init>;
          using setacctram_action = eosio::action_wrapper<"setacctram"_n, &system_contract::setacctram>;

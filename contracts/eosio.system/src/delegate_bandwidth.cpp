@@ -26,8 +26,8 @@ namespace eosiosystem {
    using std::map;
    using std::pair;
 
-   static constexpr uint32_t refund_delay_sec = 3*24*3600;
-   static constexpr int64_t  ram_gift_bytes = 1400;
+   // static constexpr uint32_t refund_delay_sec = 3*24*3600;
+   // static constexpr int64_t  ram_gift_bytes = 1400;
 
    struct [[eosio::table, eosio::contract("eosio.system")]] user_resources {
       name          owner;
@@ -166,7 +166,7 @@ namespace eosiosystem {
       if( voter_itr == _voters.end() || !has_field( voter_itr->flags1, voter_info::flags1_fields::ram_managed ) ) {
          int64_t ram_bytes, net, cpu;
          get_resource_limits( res_itr->owner.value, &ram_bytes, &net, &cpu );
-         set_resource_limits( res_itr->owner.value, res_itr->ram_bytes + ram_gift_bytes, net, cpu );
+         set_resource_limits( res_itr->owner.value, res_itr->ram_bytes + _gstate.ram_gift_bytes, net, cpu );
       }
    }
 
@@ -210,7 +210,7 @@ namespace eosiosystem {
       if( voter_itr == _voters.end() || !has_field( voter_itr->flags1, voter_info::flags1_fields::ram_managed ) ) {
          int64_t ram_bytes, net, cpu;
          get_resource_limits( res_itr->owner.value, &ram_bytes, &net, &cpu );
-         set_resource_limits( res_itr->owner.value, res_itr->ram_bytes + ram_gift_bytes, net, cpu );
+         set_resource_limits( res_itr->owner.value, res_itr->ram_bytes + _gstate.ram_gift_bytes, net, cpu );
       }
 
       INLINE_ACTION_SENDER(eosio::token, transfer)(
@@ -312,7 +312,7 @@ namespace eosiosystem {
                get_resource_limits( receiver.value, &ram_bytes, &net, &cpu );
 
                set_resource_limits( receiver.value,
-                                    ram_managed ? ram_bytes : std::max( tot_itr->ram_bytes + ram_gift_bytes, ram_bytes ),
+                                    ram_managed ? ram_bytes : std::max( tot_itr->ram_bytes + _gstate.ram_gift_bytes, ram_bytes ),
                                     net_managed ? net : tot_itr->net_weight.amount,
                                     cpu_managed ? cpu : tot_itr->cpu_weight.amount );
             }
@@ -397,7 +397,7 @@ namespace eosiosystem {
                                       _self, "refund"_n,
                                       from
             );
-            out.delay_sec = refund_delay_sec;
+            out.delay_sec = _gstate.refund_delay_sec;
             cancel_deferred( from.value ); // TODO: Remove this line when replacing deferred trxs is fixed
             out.send( from.value, from, true );
          } else {
@@ -424,10 +424,12 @@ namespace eosiosystem {
          voter_itr = _voters.emplace( voter, [&]( auto& v ) {
             v.owner  = voter;
             v.staked = total_update.amount;
+            v.last_change_time = current_time_point();
          });
       } else {
          _voters.modify( voter_itr, same_payer, [&]( auto& v ) {
             v.staked += total_update.amount;
+            v.last_change_time = current_time_point();
          });
       }
 
@@ -462,7 +464,7 @@ namespace eosiosystem {
       check( unstake_cpu_quantity >= zero_asset, "must unstake a positive amount" );
       check( unstake_net_quantity >= zero_asset, "must unstake a positive amount" );
       check( unstake_cpu_quantity.amount + unstake_net_quantity.amount > 0, "must unstake a positive amount" );
-      check( _gstate.total_activated_stake >= min_activated_stake,
+      check( _gstate.total_activated_stake >= _gstate.min_activated_stake,
              "cannot undelegate bandwidth until the chain is activated (at least 15% of all tokens participate in voting)" );
 
       changebw( from, receiver, -unstake_net_quantity, -unstake_cpu_quantity, false);
@@ -475,7 +477,7 @@ namespace eosiosystem {
       refunds_table refunds_tbl( _self, owner.value );
       auto req = refunds_tbl.find( owner.value );
       check( req != refunds_tbl.end(), "refund request not found" );
-      check( req->request_time + seconds(refund_delay_sec) <= current_time_point(),
+      check( req->request_time + seconds(_gstate.refund_delay_sec) <= current_time_point(),
              "refund is not available yet" );
 
       INLINE_ACTION_SENDER(eosio::token, transfer)(

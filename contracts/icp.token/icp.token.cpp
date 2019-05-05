@@ -16,7 +16,7 @@ namespace icp {
       require_auth(_self);
 
       co_singleton co(_self, _self.value);
-      eosio_assert(!co.exists(), "contracts already exist");
+      check(!co.exists(), "contracts already exist");
 
       co.set(collaborative_contract{icp, peer}, _self);
    }
@@ -38,8 +38,8 @@ namespace icp {
    };
 
    void token::icp_transfer(name contract, name from, name icp_to, asset quantity, string memo, uint32_t expiration, bool refund) {
-      eosio_assert(bool(_co.peer), "empty remote peer contract");
-      eosio_assert(bool(_co.icp), "empty local icp contract");
+      check(bool(_co.peer), "empty remote peer contract");
+      check(bool(_co.icp), "empty local icp contract");
 
       auto seq = eosio::next_packet_seq(_co.icp);
 
@@ -65,7 +65,7 @@ namespace icp {
       // NB: this permission should be authorized to icp contract's `eosio.code` permission
       require_auth2(_self.value, "callback"_n.value);
 
-      eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
+      check(memo.size() <= 256, "memo has more than 256 bytes");
 
       if (!refund) {
          mint(contract, to, quantity);
@@ -98,7 +98,7 @@ namespace icp {
    void token::icprefund(name contract, name from, name icp_to, asset quantity, string memo, uint32_t expiration) {
       require_auth(from);
 
-      eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
+      check(memo.size() <= 256, "memo has more than 256 bytes");
 
       burn(contract, from, quantity);
 
@@ -111,7 +111,7 @@ namespace icp {
       deposits dps(_self, contract.value);
       auto by_account_asset = dps.get_index<"accountasset"_n>();
       const auto &dp = by_account_asset.get(account_asset_key(from, quantity), "no deposit object found");
-      eosio_assert(dp.balance.amount >= quantity.amount, "overdrawn balance");
+      check(dp.balance.amount >= quantity.amount, "overdrawn balance");
 
       if (dp.balance.amount == quantity.amount) {
          dps.erase(dp);
@@ -134,7 +134,7 @@ namespace icp {
       if (memo.find("icp ") == 0) { // it is an icp call
          print("icp");
          auto account_end = memo.find(' ', 4);
-         eosio_assert(account_end != std::string::npos, "invalid icp token transfer memo");
+         check(account_end != std::string::npos, "invalid icp token transfer memo");
          auto n = memo.substr(4, account_end - 4);
          auto icp_to = eosio::name(n);
          auto h = memo.substr(account_end + 1);
@@ -167,16 +167,16 @@ namespace icp {
    void token::mint(name contract, name to, asset quantity) {
       require_auth(_self);
 
-      eosio_assert(is_account(to), "to account does not exist");
-      eosio_assert(quantity.is_valid(), "invalid quantity");
-      eosio_assert(quantity.amount > 0, "must mint positive quantity");
+      check(is_account(to), "to account does not exist");
+      check(quantity.is_valid(), "invalid quantity");
+      check(quantity.amount > 0, "must mint positive quantity");
 
       auto sym_name = quantity.symbol.code().raw();
       stats statstable(_self, contract.value);
       auto& st = statstable.get(sym_name, "token with symbol does not exist, create token before mint");
 
-      eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
-      eosio_assert(quantity.amount <= std::numeric_limits<int64_t>::max() - st.supply.amount, "quantity exceeds available supply");
+      check(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
+      check(quantity.amount <= std::numeric_limits<int64_t>::max() - st.supply.amount, "quantity exceeds available supply");
 
       require_recipient(to);
 
@@ -188,16 +188,16 @@ namespace icp {
    }
 
    void token::burn(name contract, name from, asset quantity) {
-      eosio_assert(is_account(from), "from account does not exist");
-      eosio_assert( quantity.is_valid(), "invalid quantity" );
-      eosio_assert( quantity.amount > 0, "must burn positive quantity" );
+      check(is_account(from), "from account does not exist");
+      check( quantity.is_valid(), "invalid quantity" );
+      check( quantity.amount > 0, "must burn positive quantity" );
 
       auto sym_name = quantity.symbol.code().raw();
       stats statstable(_self, contract.value);
       auto& st = statstable.get(sym_name, "token with symbol does not exist, create token before burn");
 
-      eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
-      eosio_assert(quantity.amount <= st.supply.amount, "quantity exceeds available supply");
+      check(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
+      check(quantity.amount <= st.supply.amount, "quantity exceeds available supply");
 
       require_recipient(from);
 
@@ -215,7 +215,7 @@ extern "C" {
       auto self = receiver;
       if (action == "onerror"_n.value) {
          /* onerror is only valid if it is for the "eosio" code account and authorized by "eosio"'s "active permission */
-         eosio_assert(code == "eosio"_n.value, "onerror action's are only valid from the \"eosio\" system account");
+         eosio::check(code == "eosio"_n.value, "onerror action's are only valid from the \"eosio\" system account");
       }
       if (code == self || action == "onerror"_n.value) {
          switch (action) {

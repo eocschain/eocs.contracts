@@ -16,13 +16,13 @@ namespace icp {
 
    symbol string_to_symbol(const string& from) {
          auto s = trim(from);
-         eosio_assert(!s.empty(), "creating symbol from empty string");
+         check(!s.empty(), "creating symbol from empty string");
          auto comma_pos = s.find(',');
-         eosio_assert(comma_pos != string::npos, "missing comma in symbol");
+         check(comma_pos != string::npos, "missing comma in symbol");
          auto prec_part = s.substr(0, comma_pos);
          uint8_t p = std::stoull(prec_part);
          string name_part = s.substr(comma_pos + 1);
-         eosio_assert( p <= max_precision, "precision should be <= 18");
+         check( p <= max_precision, "precision should be <= 18");
          return symbol(name_part, p);
    }
 
@@ -30,11 +30,11 @@ namespace icp {
       require_auth(_self);
 
       auto sym = string_to_symbol(symbol);
-      eosio_assert(sym.is_valid(), "invalid symbol name");
+      check(sym.is_valid(), "invalid symbol name");
 
       stats statstable(_self, contract.value);
       auto existing = statstable.find(sym.code().raw());
-      eosio_assert(existing == statstable.end(), "token with symbol already exists");
+      check(existing == statstable.end(), "token with symbol already exists");
 
       statstable.emplace(_self, [&](auto &s) {
          s.supply.symbol = sym;
@@ -42,9 +42,9 @@ namespace icp {
    }
 
    void token::transfer(name contract, name from, name to, asset quantity, string memo) {
-      eosio_assert(from != to, "cannot transfer to self");
+      check(from != to, "cannot transfer to self");
       require_auth(from);
-      eosio_assert(is_account(to), "to account does not exist");
+      check(is_account(to), "to account does not exist");
       auto sym = quantity.symbol.code().raw();
       stats statstable(_self, contract.value);
       const auto &st = statstable.get(sym);
@@ -52,10 +52,10 @@ namespace icp {
       require_recipient(from);
       require_recipient(to);
 
-      eosio_assert(quantity.is_valid(), "invalid quantity");
-      eosio_assert(quantity.amount > 0, "must transfer positive quantity");
-      eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
-      eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
+      check(quantity.is_valid(), "invalid quantity");
+      check(quantity.amount > 0, "must transfer positive quantity");
+      check(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
+      check(memo.size() <= 256, "memo has more than 256 bytes");
 
       sub_balance(contract, from, quantity);
       add_balance(contract, to, quantity, from);
@@ -66,7 +66,7 @@ namespace icp {
 
       auto by_account_asset = from_acnts.get_index<"accountasset"_n>();
       const auto& from = by_account_asset.get(account_asset_key(owner, value), "no balance object found");
-      eosio_assert(from.balance.amount >= value.amount, "overdrawn balance");
+      check(from.balance.amount >= value.amount, "overdrawn balance");
 
       if (from.balance.amount == value.amount) {
          from_acnts.erase(from);

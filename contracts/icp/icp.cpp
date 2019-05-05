@@ -28,7 +28,7 @@ void icp::setpeer(name peer) {
    require_auth(_self);
 
    peer_singleton p(_self, _self.value);
-   eosio_assert(!p.exists(), "peer icp contract name already exists");
+   check(!p.exists(), "peer icp contract name already exists");
 
    p.set(peer_contract{peer}, _self);
 }
@@ -73,8 +73,8 @@ void icp::closechannel(uint8_t clear_all, uint32_t max_num) {
       meter_singleton(_self, _self.value).remove();
    }
 
-   eosio_assert(max_num <= 0 or packets.begin() == packets.end(), "remain packets");
-   eosio_assert(max_num <= 0 or receipts.begin() == receipts.end(), "remain receipts");
+   check(max_num <= 0 or packets.begin() == packets.end(), "remain packets");
+   check(max_num <= 0 or receipts.begin() == receipts.end(), "remain receipts");
 
    _store->reset(clear_all, max_num);
 }
@@ -89,11 +89,11 @@ void icp::addblock(const bytes& data) {
 }
 
 void icp::sendaction(uint64_t seq, const bytes& send_action, uint32_t expiration, const bytes& receipt_action) {
-   eosio_assert(bool(_peer.peer), "empty peer icp contract");
+   check(bool(_peer.peer), "empty peer icp contract");
    // NB: this permission should be authorized to application layer contract's `eosio.code` permission
    require_auth2(_self.value, "sendaction"_n.value);
 
-   eosio_assert(seq == ++_peer.last_outgoing_packet_seq, ("invalid outgoing packet sequence " + std::to_string(seq)).data());
+   check(seq == ++_peer.last_outgoing_packet_seq, ("invalid outgoing packet sequence " + std::to_string(seq)).data());
    update_peer(); // update `last_outgoing_packet_seq`
 
    packet_table packets(_self, _self.value);
@@ -119,13 +119,13 @@ void icp::set_last_incoming_block_num(const capi_checksum256& id, incoming_type 
 }
 
 bytes icp::extract_action(const icpaction& ia, const capi_name& name, incoming_type type) {
-   eosio_assert(bool(_peer.peer), "empty peer icp contract");
+   check(bool(_peer.peer), "empty peer icp contract");
 
    auto action_mroot = _store->get_action_mroot(ia.block_id);
 
    auto merkle_path = unpack<vector<capi_checksum256>>(ia.merkle_path);
    auto mroot = merkle(merkle_path); // TODO: merkle path computation optimization
-   eosio_assert(mroot == action_mroot, "invalid actions merkle root");
+   check(mroot == action_mroot, "invalid actions merkle root");
 
    auto receipt = unpack<action_receipt>(ia.action_receipt);
 
@@ -137,13 +137,13 @@ bytes icp::extract_action(const icpaction& ia, const capi_name& name, incoming_t
          break;
       }
    }
-   eosio_assert(exists, "invalid action receipt digest");
+   check(exists, "invalid action receipt digest");
 
    auto a = unpack<action>(ia.action);
    auto action_digest = sha256(a);
-   eosio_assert(action_digest == receipt.act_digest, "invalid action digest");
-   eosio_assert(a.account == _peer.peer, "invalid peer icp contract");
-   eosio_assert(a.name.value == name, "invalid peer icp contract action");
+   check(action_digest == receipt.act_digest, "invalid action digest");
+   check(a.account == _peer.peer, "invalid peer icp contract");
+   check(a.name.value == name, "invalid peer icp contract action");
 
    set_last_incoming_block_num(ia.block_id, type);
 
@@ -154,7 +154,7 @@ void icp::onpacket(const icpaction& ia) {
    auto action_data = extract_action(ia, "ispacket"_n.value, incoming_type::packet);
 
    auto packet = unpack<icp_packet>(action_data);
-   eosio_assert(packet.seq == _peer.last_incoming_packet_seq + 1, ("invalid incoming packet sequence " + std::to_string(packet.seq)).data()); // TODO: is the sort order necessary?
+   check(packet.seq == _peer.last_incoming_packet_seq + 1, ("invalid incoming packet sequence " + std::to_string(packet.seq)).data()); // TODO: is the sort order necessary?
 
    ++_peer.last_incoming_packet_seq;
    ++_peer.last_outgoing_receipt_seq;
@@ -194,19 +194,19 @@ void icp::onreceipt(const icpaction& ia) {
    auto action_data = extract_action(ia, "isreceipt"_n.value, incoming_type::receipt);
 
    auto receipt = unpack<icp_receipt>(action_data);
-   eosio_assert(receipt.seq == _peer.last_incoming_receipt_seq + 1, ("invalid receipt sequence " + std::to_string(receipt.seq)).data());
+   check(receipt.seq == _peer.last_incoming_receipt_seq + 1, ("invalid receipt sequence " + std::to_string(receipt.seq)).data());
 
    ++_peer.last_incoming_receipt_seq;
    update_peer();
 
    packet_table packets(_self, _self.value);
    auto it = packets.find(receipt.pseq);
-   eosio_assert(it != packets.end(), "unable find the receipt's icp_packet sequence");
+   check(it != packets.end(), "unable find the receipt's icp_packet sequence");
    auto& packet = *it;
-   eosio_assert(static_cast<receipt_status>(packet.status) == receipt_status::unknown, "packet received receipt");
+   check(static_cast<receipt_status>(packet.status) == receipt_status::unknown, "packet received receipt");
 
    auto status = static_cast<receipt_status>(receipt.status);
-   eosio_assert(status == receipt_status::executed || status == receipt_status::expired, "invalid receipt status");
+   check(status == receipt_status::executed || status == receipt_status::expired, "invalid receipt status");
 
    packets.modify(packet, same_payer, [&](auto& p) {
       p.status = receipt.status;
@@ -234,7 +234,7 @@ void icp::onreceiptend(const icpaction& ia) {
 }
 
 void icp::genproof(uint64_t packet_seq, uint64_t receipt_seq, uint8_t finalised_receipt) { // TODO: rate limiting, anti spam
-   eosio_assert(bool(_peer.peer), "empty peer icp contract");
+   check(bool(_peer.peer), "empty peer icp contract");
 
    if (packet_seq > 0) {
       packet_table packets(_self, _self.value);
@@ -256,7 +256,7 @@ void icp::genproof(uint64_t packet_seq, uint64_t receipt_seq, uint8_t finalised_
 }
 
 void icp::cleanup(uint32_t max_num) {
-   eosio_assert(bool(_peer.peer), "empty peer icp contract");
+   check(bool(_peer.peer), "empty peer icp contract");
 
    if (max_num == 0) max_num = std::numeric_limits<uint32_t>::max();
    auto old_max_num = max_num;
@@ -281,7 +281,7 @@ void icp::cleanup(uint32_t max_num) {
    print("cutdown to block: ", block_num);
    _store->cutdown(block_num, max_num);
 
-   eosio_assert(max_num < old_max_num, "cleanup nothing");
+   check(max_num < old_max_num, "cleanup nothing");
 }
 
 void icp::dummy(name from) {
@@ -309,7 +309,7 @@ void icp::meter_add_packets(uint32_t num) {
    meter_singleton icp_meter(_self, _self.value);
    auto meter = icp_meter.get();
    meter.current_packets += num;
-   eosio_assert(meter.current_packets <= meter.max_packets, "exceed max packets");
+   check(meter.current_packets <= meter.max_packets, "exceed max packets");
    icp_meter.set(meter, _self);
 }
 

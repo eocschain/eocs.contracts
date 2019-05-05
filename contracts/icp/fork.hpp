@@ -125,7 +125,7 @@ private:
     void add_block_state(const block_header_state& block_state);
     template <typename Index>
     void add_block_id(const Index& by_blockid_index, const capi_checksum256& block_id, const capi_checksum256& previous) {
-      eosio_assert(by_blockid_index.find(to_key256(block_id)) == by_blockid_index.end(), "already existing block");
+      check(by_blockid_index.find(to_key256(block_id)) == by_blockid_index.end(), "already existing block");
 
       _blocks.emplace(_code, [&](auto& o) {
          o.pk = _blocks.available_primary_key();
