@@ -3,10 +3,11 @@
 #include <eosiolib/crypto.h>
 
 #include "producer_pay.cpp"
+/*
 #include "delegate_bandwidth.cpp"
-#include "voting.cpp"
 #include "exchange_state.cpp"
-#include "rex.cpp"
+#include "rex.cpp"*/
+#include "voting.cpp"
 
 namespace eosiosystem {
 
@@ -126,7 +127,7 @@ namespace eosiosystem {
       require_auth( _self );
       set_privileged( account.value, ispriv );
    }
-
+/*
    void system_contract::setalimits( name account, int64_t ram, int64_t net, int64_t cpu ) {
       require_auth( _self );
 
@@ -285,7 +286,7 @@ namespace eosiosystem {
       }
 
       set_resource_limits( account.value, current_ram, current_net, cpu );
-   }
+   }*/
 
    void system_contract::rmvproducer( name producer ) {
       require_auth( _self );
@@ -416,7 +417,7 @@ namespace eosiosystem {
             }
          }
       }
-
+/*
       user_resources_table  userres( _self, newact.value);
 
       userres.emplace( newact, [&]( auto& res ) {
@@ -425,7 +426,7 @@ namespace eosiosystem {
         res.cpu_weight = asset( 0, system_contract::get_core_symbol() );
       });
 
-      set_resource_limits( newact.value, 0, 0, 0 );
+      set_resource_limits( newact.value, 0, 0, 0 );*/
    }
 
    void native::setabi( name acnt, const std::vector<char>& abi ) {
@@ -442,7 +443,7 @@ namespace eosiosystem {
          });
       }
    }
-
+/*
    void system_contract::init( unsigned_int version, symbol core ) {
       require_auth( _self );
       check( version.value == 0, "unsupported version for init action" );
@@ -465,7 +466,7 @@ namespace eosiosystem {
 
       INLINE_ACTION_SENDER(eosio::token, open)( token_account, { _self, active_permission },
                                                 { rex_account, core, _self } );
-   }
+   }*/
 
    void system_contract::setglobal( std::string name, std::string value ) {
       require_auth( _self );
@@ -538,11 +539,11 @@ namespace eosiosystem {
          _gstate.ram_gift_bytes = static_cast<uint64_t>(ram_gift_bytes);
       }
    }
-
+/*
    void system_contract::setmrs( int64_t cpu_us, int64_t net_bytes, int64_t ram_bytes){
       require_auth(_self);
       set_minimum_resource_security(ram_bytes, net_bytes, cpu_us);
-   }
+   }*/
 
    void system_contract::updtbwlist(uint8_t type, const std::vector<std::string>& add, const std::vector<std::string>& rmv) {
       require_auth(_self);
