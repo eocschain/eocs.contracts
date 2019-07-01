@@ -338,11 +338,11 @@ namespace eosiosystem {
          eosio_global_state      _gstate;
          eosio_global_state2     _gstate2;
          eosio_global_state3     _gstate3;
-         rammarket               _rammarket;
+         /*rammarket               _rammarket;
          rex_pool_table          _rexpool;
          rex_fund_table          _rexfunds;
          rex_balance_table       _rexbalance;
-         rex_order_table         _rexorders;
+         rex_order_table         _rexorders;*/
 
       public:
          static constexpr eosio::name active_permission{"active"_n};
@@ -362,7 +362,7 @@ namespace eosiosystem {
 
          system_contract( name s, name code, datastream<const char*> ds );
          ~system_contract();
-
+	 /*
          static symbol get_core_symbol( name system_account = "eosio"_n ) {
             rammarket rm(system_account, system_account.value);
             const static auto sym = get_core_symbol( rm );
@@ -371,7 +371,7 @@ namespace eosiosystem {
 
          // Actions:
          [[eosio::action]]
-         void init( unsigned_int version, symbol core );
+         void init( unsigned_int version, symbol core );*/
          [[eosio::action]]
          void onblock( ignore<block_header> header );
         /*
@@ -681,19 +681,19 @@ namespace eosiosystem {
          using bidname_action = eosio::action_wrapper<"bidname"_n, &system_contract::bidname>;
          using bidrefund_action = eosio::action_wrapper<"bidrefund"_n, &system_contract::bidrefund>;
          using setpriv_action = eosio::action_wrapper<"setpriv"_n, &system_contract::setpriv>;
-         using setalimits_action = eosio::action_wrapper<"setalimits"_n, &system_contract::setalimits>;
+         /*using setalimits_action = eosio::action_wrapper<"setalimits"_n, &system_contract::setalimits>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
-         using setmrs_action = eosio::action_wrapper<"setmrs"_n, &system_contract::setmrs>;
+         using setmrs_action = eosio::action_wrapper<"setmrs"_n, &system_contract::setmrs>;*/
 
       private:
 
          // Implementation details:
-
+	 /*
          static symbol get_core_symbol( const rammarket& rm ) {
             auto itr = rm.find(ramcore_symbol.raw());
             check(itr != rm.end(), "system contract must first be initialized");
             return itr->quote.balance.symbol;
-         }
+         }*/
 
          //defined in eosio.system.cpp
          static eosio_global_state get_default_parameters();
@@ -704,6 +704,7 @@ namespace eosiosystem {
          void update_ram_supply();
 
          // defined in rex.cpp
+	 /*
          void runrex( uint16_t max );
          void update_resource_limits( const name& from, const name& receiver, int64_t delta_net, int64_t delta_cpu );
          void check_voting_requirement( const name& owner,
@@ -741,7 +742,7 @@ namespace eosiosystem {
          // defined in delegate_bandwidth.cpp
          void changebw( name from, name receiver,
                         asset stake_net_quantity, asset stake_cpu_quantity, bool transfer );
-         void update_voting_power( const name& voter, const asset& total_update );
+         void update_voting_power( const name& voter, const asset& total_update );*/
 
          // defined in voting.hpp
          void update_elected_producers( block_timestamp timestamp );
@@ -783,7 +784,7 @@ namespace eosiosystem {
                system_contract* this_contract;
          };
 
-         registration<&system_contract::update_rex_stake> vote_stake_updater{ this };
+         //registration<&system_contract::update_rex_stake> vote_stake_updater{ this };
    };
 
 } /// eosiosystem

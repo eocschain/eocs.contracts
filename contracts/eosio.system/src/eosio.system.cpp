@@ -19,12 +19,12 @@ namespace eosiosystem {
     _producers2(_self, _self.value),
     _global(_self, _self.value),
     _global2(_self, _self.value),
-    _global3(_self, _self.value),
-    _rammarket(_self, _self.value),
+    _global3(_self, _self.value)
+    /*_rammarket(_self, _self.value),
     _rexpool(_self, _self.value),
     _rexfunds(_self, _self.value),
     _rexbalance(_self, _self.value),
-    _rexorders(_self, _self.value)
+    _rexorders(_self, _self.value)*/
    {
       //print( "construct system\n" );
       _gstate  = _global.exists() ? _global.get() : get_default_parameters();
@@ -52,9 +52,10 @@ namespace eosiosystem {
       const static block_timestamp cbt{ current_time_point() };
       return cbt;
    }
-
+   	
    symbol system_contract::core_symbol()const {
-      const static auto sym = get_core_symbol( _rammarket );
+      //const static auto sym = get_core_symbol( _rammarket );
+      symbol sym;
       return sym;
    }
 
@@ -72,14 +73,14 @@ namespace eosiosystem {
       check( max_ram_size > _gstate.total_ram_bytes_reserved, "attempt to set max below reserved" );
 
       auto delta = int64_t(max_ram_size) - int64_t(_gstate.max_ram_size);
-      auto itr = _rammarket.find(ramcore_symbol.raw());
+      //auto itr = _rammarket.find(ramcore_symbol.raw());
 
       /**
        *  Increase the amount of ram for sale based upon the change in max ram size.
-       */
+       *
       _rammarket.modify( itr, same_payer, [&]( auto& m ) {
          m.base.balance.amount += delta;
-      });
+      });*/
 
       _gstate.max_ram_size = max_ram_size;
    }
@@ -89,16 +90,16 @@ namespace eosiosystem {
 
       if( cbt <= _gstate2.last_ram_increase ) return;
 
-      auto itr = _rammarket.find(ramcore_symbol.raw());
+      //auto itr = _rammarket.find(ramcore_symbol.raw());
       auto new_ram = (cbt.slot - _gstate2.last_ram_increase.slot)*_gstate2.new_ram_per_block;
       _gstate.max_ram_size += new_ram;
 
       /**
        *  Increase the amount of ram for sale based upon the change in max ram size.
-       */
+       *
       _rammarket.modify( itr, same_payer, [&]( auto& m ) {
          m.base.balance.amount += new_ram;
-      });
+      });*/
       _gstate2.last_ram_increase = cbt;
    }
 
@@ -557,14 +558,16 @@ EOSIO_DISPATCH( eosiosystem::system_contract,
      // native.hpp (newaccount definition is actually in eosio.system.cpp)
      (newaccount)(updateauth)(deleteauth)(linkauth)(unlinkauth)(canceldelay)(onerror)(setabi)
      // eosio.system.cpp
-     (init)(setram)(setramrate)(setparams)(setpriv)(setalimits)(setacctram)(setacctnet)(setacctcpu)
+     //(init)(setram)(setramrate)(setparams)(setpriv)(setalimits)(setacctram)(setacctnet)(setacctcpu)
+     (setram)(setramrate)(setparams)(setpriv)
      (rmvproducer)(updtrevision)(bidname)(bidrefund)
-     (setglobal)(setmrs)(updtbwlist)
+     (setglobal)(updtbwlist)
      // rex.cpp
+     /*
      (deposit)(withdraw)(buyrex)(unstaketorex)(sellrex)(cnclrexorder)(rentcpu)(rentnet)(fundcpuloan)(fundnetloan)
-     (defcpuloan)(defnetloan)(updaterex)(consolidate)(mvtosavings)(mvfrsavings)(setrex)(rexexec)(closerex)
+     (defcpuloan)(defnetloan)(updaterex)(consolidate)(mvtosavings)(mvfrsavings)(setrex)(rexexec)(closerex)*/
      // delegate_bandwidth.cpp
-     (buyrambytes)(buyram)(sellram)(delegatebw)(undelegatebw)(refund)
+     //(buyrambytes)(buyram)(sellram)(delegatebw)(undelegatebw)(refund)
      // voting.cpp
      (regproducer)(unregprod)(voteproducer)(regproxy)
      // producer_pay.cpp
