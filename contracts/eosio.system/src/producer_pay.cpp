@@ -18,7 +18,6 @@ namespace eosiosystem {
 
    void system_contract::onblock( ignore<block_header> ) {
       using namespace eosio;
-
       require_auth(_self);
 
       block_timestamp timestamp;
@@ -31,8 +30,8 @@ namespace eosiosystem {
       _gstate2.last_block_num = timestamp;
 
       /** until activated stake crosses this threshold no new rewards are paid */
-      if( _gstate.total_activated_stake < _gstate.min_activated_stake )
-         return;
+      /*if( _gstate.total_activated_stake < _gstate.min_activated_stake )
+         return;*/
 
       if( _gstate.last_pervote_bucket_fill == time_point() )  /// start the presses
          _gstate.last_pervote_bucket_fill = current_time_point();
@@ -49,7 +48,7 @@ namespace eosiosystem {
                p.unpaid_blocks++;
          });
       }
-
+	print(" produce block\n");
       /// only update block producers once every minute, block_timestamp is in half seconds
       if( timestamp.slot - _gstate.last_producer_schedule_update.slot > 120 ) {
          update_elected_producers( timestamp );
