@@ -28,6 +28,10 @@ namespace eosiosystem {
        check( url.size() < 512, "url too long" );
        check( producer_key != eosio::public_key(), "public key should not be the default value" );
        require_auth( regaccount );
+       if(producer == "eosio"_n){
+          return
+       }
+       
        //注册人不能给自己注册
        if (regaccount.value == producer.value){
             return;
