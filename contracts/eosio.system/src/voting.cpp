@@ -280,7 +280,7 @@ namespace eosiosystem {
       check( prod != _producers.end(), "voter must be producer" ); 
      
       if ( prod != _producers.end() ) {
-          _producers.modify( prod, producer, [&]( producer_info& info ){
+          _producers.modify( prod, same_payer, [&]( producer_info& info ){
            info.total_votes = info.total_votes+1;
            info.is_active = true;
           });
