@@ -282,7 +282,7 @@ namespace eosiosystem {
       if ( prod != _producers.end() ) {
           _producers.modify( prod, producer, [&]( producer_info& info ){
            info.total_votes = info.total_votes+1;
-           info.active = true;
+           info.is_active = true;
           });
 
    }
