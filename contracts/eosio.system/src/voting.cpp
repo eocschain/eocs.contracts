@@ -79,7 +79,7 @@ namespace eosiosystem {
             printf("The producer is not initialized\n");
             return;
    }
-
+}
    void system_contract::unregprod( const name producer ) {
       require_auth( producer );
 
@@ -205,7 +205,7 @@ namespace eosiosystem {
                   auto pv = _producers.find( p.value );
                   if ( pv != _producers.end() ){
                       _producers.modify( pv, p, [&]( producer_info& info ){
-                      info.total_votes     = 1;
+                      info.total_votes     = 1;});
                   } else{
                         printf("vote not found producer\n");
                         return;
