@@ -288,7 +288,7 @@ namespace eosiosystem {
 
       set_resource_limits( account.value, current_ram, current_net, cpu );
    }*/
-   void system_contract::initregproducer( const name producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
+   void system_contract::initproducer( const name producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
       require_auth(_self);
       check( url.size() < 512, "url too long" );
       check( producer_key != eosio::public_key(), "public key should not be the default value" );
@@ -585,7 +585,7 @@ EOSIO_DISPATCH( eosiosystem::system_contract,
      (newaccount)(updateauth)(deleteauth)(linkauth)(unlinkauth)(canceldelay)(onerror)(setabi)
      // eosio.system.cpp
      //(init)(setram)(setramrate)(setparams)(setpriv)(setalimits)(setacctram)(setacctnet)(setacctcpu)
-     (setram)(setramrate)(setparams)(setpriv)(initregproducer)
+     (setram)(setramrate)(setparams)(setpriv)(initproducer)
      (rmvproducer)(updtrevision)(bidname)(bidrefund)
      (setglobal)(updtbwlist)
      // rex.cpp

@@ -570,7 +570,7 @@ namespace eosiosystem {
 
         // init producer by eosio
         [[eosio::action]]
-         void initregproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
+         void initproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
          // functions defined in voting.cpp
 
          [[eosio::action]]
@@ -687,6 +687,7 @@ namespace eosiosystem {
          /*using setalimits_action = eosio::action_wrapper<"setalimits"_n, &system_contract::setalimits>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
          using setmrs_action = eosio::action_wrapper<"setmrs"_n, &system_contract::setmrs>;*/
+         using initproducer_action = eosio::action_wrapper<"initproducer"_n, &system_contract::initproducer>;
 
       private:
 

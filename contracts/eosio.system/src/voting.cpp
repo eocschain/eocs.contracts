@@ -60,8 +60,8 @@ namespace eosiosystem {
             // When introducing the producer2 table row for the first time, the producer's votes must also be accounted for in the global total_producer_votepay_share at the same time.
          }
        }else{
-            _producers.emplace( producer, [&]( producer_info& info ){
-            info.owner           = producer;
+            _producers.emplace( regproducer, [&]( producer_info& info ){
+            info.owner           = regproducer;
             info.total_votes     = 0;
             info.producer_key    = producer_key;
             info.is_active       = true;
@@ -69,8 +69,8 @@ namespace eosiosystem {
             info.location        = location;
             info.last_claim_time = ct;
          });
-         _producers2.emplace( producer, [&]( producer_info2& info ){
-            info.owner                     = producer;
+         _producers2.emplace( regproducer, [&]( producer_info2& info ){
+            info.owner                     = regproducer;
             info.last_votepay_share_update = ct;
          });
       }
@@ -97,8 +97,8 @@ namespace eosiosystem {
       std::vector< std::pair<eosio::producer_key,uint16_t> > top_producers;
       top_producers.reserve(_gstate.max_producer_schedule_size);
 
-      //for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size && 0 < it->total_votes && it->active(); ++it ) {
-      for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size &&  it->active(); ++it ) {
+      for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size && 0 < it->total_votes && it->active(); ++it ) {
+      //for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size &&  it->active(); ++it ) {
          top_producers.emplace_back( std::pair<eosio::producer_key,uint16_t>({{it->owner, it->producer_key}, it->location}) );
       }
 
@@ -216,7 +216,7 @@ namespace eosiosystem {
               printf("not found  voter_name\n");
               return;
             }
-      }
+      
       //update_votes( voter_name, proxy, producers, true );
       /*vote_stake_updater( voter_name );
       update_votes( voter_name, proxy, producers, true );
