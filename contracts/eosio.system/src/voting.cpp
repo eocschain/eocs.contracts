@@ -76,7 +76,7 @@ namespace eosiosystem {
 
    // }
 
-   void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location , const name regaccount){
+   void system_contract::regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location , const name regaccount){
        check( url.size() < 512, "url too long" );
        check( producer_key != eosio::public_key(), "public key should not be the default value" );
        require_auth( regaccount );
