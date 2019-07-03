@@ -102,6 +102,7 @@ namespace eosiosystem {
 
 
    void system_contract::update_elected_producers( block_timestamp block_time ) {
+      print( "enter update_elected_producers" );
       _gstate.last_producer_schedule_update = block_time;
 
       auto idx = _producers.get_index<"prototalvote"_n>();
@@ -114,10 +115,12 @@ namespace eosiosystem {
          top_producers.emplace_back( std::pair<eosio::producer_key,uint16_t>({{it->owner, it->producer_key}, it->location}) );
       }
 
+      print("top_producers.size() is ",top_producers.size());
+      print("last producer schedule size is ", _gstate.last_producer_schedule_size);
       if ( top_producers.size() < _gstate.last_producer_schedule_size ) {
          return;
       }
-
+      print("begin sort");
       /// sort by producer name
       std::sort( top_producers.begin(), top_producers.end() );
 
@@ -130,6 +133,7 @@ namespace eosiosystem {
       auto packed_schedule = pack(producers);
 
       if( set_proposed_producers( packed_schedule.data(),  packed_schedule.size() ) >= 0 ) {
+         print("set proposed producers");
          _gstate.last_producer_schedule_size = static_cast<decltype(_gstate.last_producer_schedule_size)>( top_producers.size() );
       }
    }
