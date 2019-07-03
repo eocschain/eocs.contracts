@@ -284,9 +284,8 @@ namespace eosiosystem {
            info.total_votes = info.total_votes+1;
            info.is_active = true;
           });
-
+      }
    }
-
    /**
     *  An account marked as a proxy can vote with the weight of other accounts which
     *  have selected it as a proxy. Other accounts must refresh their voteproducer to
