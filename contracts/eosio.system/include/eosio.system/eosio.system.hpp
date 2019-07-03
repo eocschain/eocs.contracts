@@ -570,11 +570,16 @@ namespace eosiosystem {
 
          // functions defined in voting.cpp
 
+         // [[eosio::action]]
+         // void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
          [[eosio::action]]
-         void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
+         void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location , const name regaccount);
+
+         // [[eosio::action]]
+         // void unregprod( const name producer );
 
          [[eosio::action]]
-         void unregprod( const name producer );
+         void unregprod( const name producer, const name unregaccount );
 
          [[eosio::action]]
          void setram( uint64_t max_ram_size );

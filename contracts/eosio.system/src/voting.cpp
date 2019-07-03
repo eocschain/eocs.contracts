@@ -31,59 +31,130 @@ namespace eosiosystem {
     *  @pre authority of producer to register
     *
     */
-   void system_contract::regproducer( const name producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
-      check( url.size() < 512, "url too long" );
-      check( producer_key != eosio::public_key(), "public key should not be the default value" );
-      require_auth( producer );
+   // void system_contract::regproducer( const name producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
+   //    check( url.size() < 512, "url too long" );
+   //    check( producer_key != eosio::public_key(), "public key should not be the default value" );
+   //    require_auth( producer );
+
+   //    auto prod = _producers.find( producer.value );
+   //    const auto ct = current_time_point();
+
+   //    if ( prod != _producers.end() ) {
+   //       _producers.modify( prod, producer, [&]( producer_info& info ){
+   //          info.producer_key = producer_key;
+   //          info.is_active    = true;
+   //          info.url          = url;
+   //          info.location     = location;
+   //          if ( info.last_claim_time == time_point() )
+   //             info.last_claim_time = ct;
+   //       });
+
+   //       auto prod2 = _producers2.find( producer.value );
+   //       if ( prod2 == _producers2.end() ) {
+   //          _producers2.emplace( producer, [&]( producer_info2& info ){
+   //             info.owner                     = producer;
+   //             info.last_votepay_share_update = ct;
+   //          });
+   //          update_total_votepay_share( ct, 0.0, prod->total_votes );
+   //          // When introducing the producer2 table row for the first time, the producer's votes must also be accounted for in the global total_producer_votepay_share at the same time.
+   //       }
+   //    } else {
+   //       _producers.emplace( producer, [&]( producer_info& info ){
+   //          info.owner           = producer;
+   //          info.total_votes     = 0;
+   //          info.producer_key    = producer_key;
+   //          info.is_active       = true;
+   //          info.url             = url;
+   //          info.location        = location;
+   //          info.last_claim_time = ct;
+   //       });
+   //       _producers2.emplace( producer, [&]( producer_info2& info ){
+   //          info.owner                     = producer;
+   //          info.last_votepay_share_update = ct;
+   //       });
+   //    }
+
+   // }
+
+   void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location , const name regaccount){
+       check( url.size() < 512, "url too long" );
+       check( producer_key != eosio::public_key(), "public key should not be the default value" );
+       require_auth( regaccount );
+       //注册人不能给自己注册
+       if (regaccount.value == producer.value){
+            return;
+       }
+
+       //注册人不是eosio
+       if(regaccount != "eosio"_n){
+          //查找注册人是否是生产者
+          auto reg = _producers.find( regaccount.value );
+          check(reg != _producers.end(), "regaccount should be in producers");
+          if (reg == _producers.end()){
+             return;
+          }
+       }
 
       auto prod = _producers.find( producer.value );
       const auto ct = current_time_point();
-
       if ( prod != _producers.end() ) {
-         _producers.modify( prod, producer, [&]( producer_info& info ){
-            info.producer_key = producer_key;
-            info.is_active    = true;
-            info.url          = url;
-            info.location     = location;
-            if ( info.last_claim_time == time_point() )
-               info.last_claim_time = ct;
-         });
+             _producers.modify( prod, producer, [&]( producer_info& info ){
+             info.producer_key = producer_key;
+             info.is_active    = true;
+             info.url          = url;
+             info.location     = location;
+             if ( info.last_claim_time == time_point() )
+                info.last_claim_time = ct;
+          });
 
-         auto prod2 = _producers2.find( producer.value );
-         if ( prod2 == _producers2.end() ) {
-            _producers2.emplace( producer, [&]( producer_info2& info ){
-               info.owner                     = producer;
-               info.last_votepay_share_update = ct;
-            });
-            update_total_votepay_share( ct, 0.0, prod->total_votes );
-            // When introducing the producer2 table row for the first time, the producer's votes must also be accounted for in the global total_producer_votepay_share at the same time.
-         }
+          auto prod2 = _producers2.find( producer.value );
+          if ( prod2 == _producers2.end() ) {
+             _producers2.emplace( producer, [&]( producer_info2& info ){
+                info.owner                     = producer;
+                info.last_votepay_share_update = ct;
+             });
+             update_total_votepay_share( ct, 0.0, prod->total_votes );
+             // When introducing the producer2 table row for the first time, the producer's votes must also be accounted for in the global total_producer_votepay_share at the same time.
+          }
       } else {
-         _producers.emplace( producer, [&]( producer_info& info ){
-            info.owner           = producer;
-            info.total_votes     = 0;
-            info.producer_key    = producer_key;
-            info.is_active       = true;
-            info.url             = url;
-            info.location        = location;
-            info.last_claim_time = ct;
-         });
-         _producers2.emplace( producer, [&]( producer_info2& info ){
-            info.owner                     = producer;
-            info.last_votepay_share_update = ct;
-         });
-      }
+          _producers.emplace( producer, [&]( producer_info& info ){
+             info.owner           = producer;
+             info.total_votes     = 0;
+             info.producer_key    = producer_key;
+             info.is_active       = true;
+             info.url             = url;
+             info.location        = location;
+             info.last_claim_time = ct;
+          });
+          _producers2.emplace( producer, [&]( producer_info2& info ){
+             info.owner                     = producer;
+             info.last_votepay_share_update = ct;
+          });
+       }
+
 
    }
 
-   void system_contract::unregprod( const name producer ) {
-      require_auth( producer );
+   // void system_contract::unregprod( const name producer ) {
+   //    require_auth( producer );
 
-      const auto& prod = _producers.get( producer.value, "producer not found" );
-      _producers.modify( prod, same_payer, [&]( producer_info& info ){
-         info.deactivate();
-      });
+   //    const auto& prod = _producers.get( producer.value, "producer not found" );
+   //    _producers.modify( prod, same_payer, [&]( producer_info& info ){
+   //       info.deactivate();
+   //    });
+   // }
+
+   void system_contract::unregprod( const name producer, const name unregaccount ){
+       if (unregaccount != "eosio"_n){
+          require_auth( unregaccount );
+          check(unregaccount.value == producer.value, "usaul account can only unreg self");
+       }
+       const auto& prod = _producers.get( producer.value, "producer not found" );
+       _producers.modify( prod, same_payer, [&]( producer_info& info ){
+          info.deactivate();
+       });
    }
+
 
    void system_contract::update_elected_producers( block_timestamp block_time ) {
       _gstate.last_producer_schedule_update = block_time;
@@ -93,8 +164,8 @@ namespace eosiosystem {
       std::vector< std::pair<eosio::producer_key,uint16_t> > top_producers;
       top_producers.reserve(_gstate.max_producer_schedule_size);
 
-      //for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size && 0 < it->total_votes && it->active(); ++it ) {
-      for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size &&  it->active(); ++it ) {
+      for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size && 0 < it->total_votes && it->active(); ++it ) {
+      //for ( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < _gstate.max_producer_schedule_size &&  it->active(); ++it ) {
          top_producers.emplace_back( std::pair<eosio::producer_key,uint16_t>({{it->owner, it->producer_key}, it->location}) );
       }
 
@@ -204,126 +275,16 @@ namespace eosiosystem {
 
    void system_contract::update_votes( const name voter_name, const name proxy, const std::vector<name>& producers, bool voting ) {
       //validate input
-      if ( proxy ) {
-         check( producers.size() == 0, "cannot vote for producers and proxy at same time" );
-         check( voter_name != proxy, "cannot proxy to self" );
-      } else {
-         check( producers.size() <= 30, "attempt to vote for too many producers" );
-         for( size_t i = 1; i < producers.size(); ++i ) {
-            check( producers[i-1] < producers[i], "producer votes must be unique and sorted" );
-         }
-      }
+     
+      auto prod = _producers.find(voter_name.value);
+      check( prod != _producers.end(), "voter must be producer" ); 
+     
+      if ( prod != _producers.end() ) {
+          _producers.modify( prod, producer, [&]( producer_info& info ){
+           info.total_votes = info.total_votes+1;
+           info.active = true;
+          });
 
-      auto voter = _voters.find( voter_name.value );
-      check( voter != _voters.end(), "user must stake before they can vote" ); /// staking creates voter object
-      check( !proxy || !voter->is_proxy, "account registered as a proxy is not allowed to use a proxy" );
-
-      /**
-       * The first time someone votes we calculate and set last_vote_weight, since they cannot unstake until
-       * after total_activated_stake hits threshold, we can use last_vote_weight to determine that this is
-       * their first vote and should consider their stake activated.
-       */
-      if( voter->last_vote_weight <= 0.0 ) {
-         _gstate.total_activated_stake += voter->staked;
-         if( _gstate.total_activated_stake >= _gstate.min_activated_stake && _gstate.thresh_activated_stake_time == time_point() ) {
-            _gstate.thresh_activated_stake_time = current_time_point();
-         }
-      }
-
-      auto new_vote_weight = stake2vote( voter->staked );
-      if( voter->is_proxy ) {
-         new_vote_weight += voter->proxied_vote_weight;
-      }
-
-      boost::container::flat_map<name, std::pair<double, bool /*new*/> > producer_deltas;
-      if ( voter->last_vote_weight > 0 ) {
-         if( voter->proxy ) {
-            auto old_proxy = _voters.find( voter->proxy.value );
-            check( old_proxy != _voters.end(), "old proxy not found" ); //data corruption
-            _voters.modify( old_proxy, same_payer, [&]( auto& vp ) {
-                  vp.proxied_vote_weight -= voter->last_vote_weight;
-                  vp.last_change_time = current_time_point();
-               });
-            propagate_weight_change( *old_proxy );
-         } else {
-            for( const auto& p : voter->producers ) {
-               auto& d = producer_deltas[p];
-               d.first -= voter->last_vote_weight;
-               d.second = false;
-            }
-         }
-      }
-
-      if( proxy ) {
-         auto new_proxy = _voters.find( proxy.value );
-         check( new_proxy != _voters.end(), "invalid proxy specified" ); //if ( !voting ) { data corruption } else { wrong vote }
-         check( !voting || new_proxy->is_proxy, "proxy not found" );
-         if ( new_vote_weight >= 0 ) {
-            _voters.modify( new_proxy, same_payer, [&]( auto& vp ) {
-                  vp.proxied_vote_weight += new_vote_weight;
-                  vp.last_change_time = current_time_point();
-               });
-            propagate_weight_change( *new_proxy );
-         }
-      } else {
-         if( new_vote_weight >= 0 ) {
-            for( const auto& p : producers ) {
-               auto& d = producer_deltas[p];
-               d.first += new_vote_weight;
-               d.second = true;
-            }
-         }
-      }
-
-      const auto ct = current_time_point();
-      double delta_change_rate         = 0.0;
-      double total_inactive_vpay_share = 0.0;
-      for( const auto& pd : producer_deltas ) {
-         auto pitr = _producers.find( pd.first.value );
-         if( pitr != _producers.end() ) {
-            check( !voting || pitr->active() || !pd.second.second /* not from new set */, "producer is not currently registered" );
-            double init_total_votes = pitr->total_votes;
-            _producers.modify( pitr, same_payer, [&]( auto& p ) {
-               p.total_votes += pd.second.first;
-               if ( p.total_votes < 0 ) { // floating point arithmetics can give small negative numbers
-                  p.total_votes = 0;
-               }
-               _gstate.total_producer_vote_weight += pd.second.first;
-               //check( p.total_votes >= 0, "something bad happened" );
-            });
-            auto prod2 = _producers2.find( pd.first.value );
-            if( prod2 != _producers2.end() ) {
-               const auto last_claim_plus_3days = pitr->last_claim_time + microseconds(3 * _gstate.useconds_per_day);
-               bool crossed_threshold       = (last_claim_plus_3days <= ct);
-               bool updated_after_threshold = (last_claim_plus_3days <= prod2->last_votepay_share_update);
-               // Note: updated_after_threshold implies cross_threshold
-
-               double new_votepay_share = update_producer_votepay_share( prod2,
-                                             ct,
-                                             updated_after_threshold ? 0.0 : init_total_votes,
-                                             crossed_threshold && !updated_after_threshold // only reset votepay_share once after threshold
-                                          );
-
-               if( !crossed_threshold ) {
-                  delta_change_rate += pd.second.first;
-               } else if( !updated_after_threshold ) {
-                  total_inactive_vpay_share += new_votepay_share;
-                  delta_change_rate -= init_total_votes;
-               }
-            }
-         } else {
-            check( !pd.second.second /* not from new set */, "producer is not registered" ); //data corruption
-         }
-      }
-
-      update_total_votepay_share( ct, -total_inactive_vpay_share, delta_change_rate );
-
-      _voters.modify( voter, same_payer, [&]( auto& av ) {
-         av.last_vote_weight = new_vote_weight;
-         av.producers = producers;
-         av.proxy     = proxy;
-         av.last_change_time = ct;
-      });
    }
 
    /**
