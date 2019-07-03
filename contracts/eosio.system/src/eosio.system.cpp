@@ -64,7 +64,7 @@ namespace eosiosystem {
       _global2.set( _gstate2, _self );
       _global3.set( _gstate3, _self );
    }
-
+   
    void system_contract::setram( uint64_t max_ram_size ) {
       require_auth( _self );
 
@@ -288,6 +288,32 @@ namespace eosiosystem {
 
       set_resource_limits( account.value, current_ram, current_net, cpu );
    }*/
+   void system_contract::initregproducer( const name producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
+      require_auth(_self);
+      check( url.size() < 512, "url too long" );
+      check( producer_key != eosio::public_key(), "public key should not be the default value" );
+      
+      auto prod = _producers.find( producer.value );
+      const auto ct = current_time_point();
+      if ( prod != _producers.end() ) {
+            printf("initregproducer fail,already initregproducer");
+            return;
+      }else{
+            _producers.emplace( producer, [&]( producer_info& info ){
+            info.owner           = producer;
+            info.total_votes     = 1;
+            info.producer_key    = producer_key;
+            info.is_active       = true;
+            info.url             = url;
+            info.location        = location;
+            info.last_claim_time = ct;
+         });
+         _producers2.emplace( producer, [&]( producer_info2& info ){
+            info.owner                     = producer;
+            info.last_votepay_share_update = ct;
+         });
+      }
+   }
 
    void system_contract::rmvproducer( name producer ) {
       require_auth( _self );
@@ -559,7 +585,7 @@ EOSIO_DISPATCH( eosiosystem::system_contract,
      (newaccount)(updateauth)(deleteauth)(linkauth)(unlinkauth)(canceldelay)(onerror)(setabi)
      // eosio.system.cpp
      //(init)(setram)(setramrate)(setparams)(setpriv)(setalimits)(setacctram)(setacctnet)(setacctcpu)
-     (setram)(setramrate)(setparams)(setpriv)
+     (setram)(setramrate)(setparams)(setpriv)(initregproducer)
      (rmvproducer)(updtrevision)(bidname)(bidrefund)
      (setglobal)(updtbwlist)
      // rex.cpp

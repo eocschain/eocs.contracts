@@ -31,7 +31,7 @@ namespace eosiosystem {
     *  @pre authority of producer to register
     *
     */
-   void system_contract::regproducer( const name producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
+   void system_contract::regproducer( const name producer,const name regproducer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
       check( url.size() < 512, "url too long" );
       check( producer_key != eosio::public_key(), "public key should not be the default value" );
       require_auth( producer );
@@ -40,6 +40,7 @@ namespace eosiosystem {
       const auto ct = current_time_point();
 
       if ( prod != _producers.end() ) {
+         if(!regproducer){  
          _producers.modify( prod, producer, [&]( producer_info& info ){
             info.producer_key = producer_key;
             info.is_active    = true;
@@ -58,8 +59,8 @@ namespace eosiosystem {
             update_total_votepay_share( ct, 0.0, prod->total_votes );
             // When introducing the producer2 table row for the first time, the producer's votes must also be accounted for in the global total_producer_votepay_share at the same time.
          }
-      } else {
-         _producers.emplace( producer, [&]( producer_info& info ){
+       }else{
+            _producers.emplace( producer, [&]( producer_info& info ){
             info.owner           = producer;
             info.total_votes     = 0;
             info.producer_key    = producer_key;
@@ -74,6 +75,9 @@ namespace eosiosystem {
          });
       }
 
+    } else {
+            printf("The producer is not initialized\n");
+            return;
    }
 
    void system_contract::unregprod( const name producer ) {
@@ -193,7 +197,27 @@ namespace eosiosystem {
     */
    void system_contract::voteproducer( const name voter_name, const name proxy, const std::vector<name>& producers ) {
       require_auth( voter_name );
-      update_votes( voter_name, proxy, producers, true );
+
+      auto prod = _producers.find( voter_name.value );
+      const auto ct = current_time_point();
+      if ( prod != _producers.end() ) {
+            for( const auto& p : producers ) {
+                  auto pv = _producers.find( p.value );
+                  if ( pv != _producers.end() ){
+                      _producers.modify( pv, p, [&]( producer_info& info ){
+                      info.total_votes     = 1;
+                  } else{
+                        printf("vote not found producer\n");
+                        return;
+                  }
+            }
+    
+            }else{
+              printf("not found  voter_name\n");
+              return;
+            }
+      }
+      //update_votes( voter_name, proxy, producers, true );
       /*vote_stake_updater( voter_name );
       update_votes( voter_name, proxy, producers, true );
       auto rex_itr = _rexbalance.find( voter_name.value );

@@ -568,10 +568,13 @@ namespace eosiosystem {
          [[eosio::action]]
          void refund( name owner );*/
 
+        // init producer by eosio
+        [[eosio::action]]
+         void initregproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
          // functions defined in voting.cpp
 
          [[eosio::action]]
-         void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
+         void regproducer( const name producer,const name regproducer, const public_key& producer_key, const std::string& url, uint16_t location );
 
          [[eosio::action]]
          void unregprod( const name producer );
