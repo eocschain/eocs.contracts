@@ -180,6 +180,7 @@ namespace eosiosystem {
 
       update_total_votepay_share( ct, -new_votepay_share, (updated_after_threshold ? prod.total_votes : 0.0) );
       */
+     /*
       _producers.modify( prod, same_payer, [&](auto& p) {
          p.last_claim_time = ct;
          p.unpaid_blocks   = 0;
@@ -217,7 +218,7 @@ namespace eosiosystem {
                { vpay_account, owner, asset(producer_per_vote_pay, core_symbol()), std::string("producer vote pay") }
             );
          }
-      }
+      }*/
    }
 
    void system_contract::claimbonus( const name owner ) {
