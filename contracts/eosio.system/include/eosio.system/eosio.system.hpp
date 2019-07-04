@@ -276,16 +276,10 @@ namespace eosiosystem {
          [[eosio::action]]
          void unregprod( const name producer, const name unregaccount );
 
-         [[eosio::action]]
-         void setram( uint64_t max_ram_size );
-         [[eosio::action]]
-         void setramrate( uint16_t bytes_per_block );
+         
 
          [[eosio::action]]
          void voteproducer( const name voter, const name proxy, const std::vector<name>& producers );
-
-         [[eosio::action]]
-         void regproxy( const name proxy, bool isproxy );
 
          [[eosio::action]]
          void setparams( const eosio::blockchain_parameters& params );
@@ -320,10 +314,7 @@ namespace eosiosystem {
         
          using regproducer_action = eosio::action_wrapper<"regproducer"_n, &system_contract::regproducer>;
          using unregprod_action = eosio::action_wrapper<"unregprod"_n, &system_contract::unregprod>;
-         using setram_action = eosio::action_wrapper<"setram"_n, &system_contract::setram>;
-         using setramrate_action = eosio::action_wrapper<"setramrate"_n, &system_contract::setramrate>;
          using voteproducer_action = eosio::action_wrapper<"voteproducer"_n, &system_contract::voteproducer>;
-         using regproxy_action = eosio::action_wrapper<"regproxy"_n, &system_contract::regproxy>;
          using claimrewards_action = eosio::action_wrapper<"claimrewards"_n, &system_contract::claimrewards>;
          using rmvproducer_action = eosio::action_wrapper<"rmvproducer"_n, &system_contract::rmvproducer>;
          using updtrevision_action = eosio::action_wrapper<"updtrevision"_n, &system_contract::updtrevision>;

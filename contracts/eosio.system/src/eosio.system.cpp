@@ -61,18 +61,7 @@ namespace eosiosystem {
       _global3.set( _gstate3, _self );
    }
 
-   void system_contract::setram( uint64_t max_ram_size ) {
-      require_auth( _self );
-
-      check( _gstate.max_ram_size < max_ram_size, "ram may only be increased" ); /// decreasing ram might result market maker issues
-      check( max_ram_size < 1024ll*1024*1024*1024*1024, "ram size is unrealistic" );
-      check( max_ram_size > _gstate.total_ram_bytes_reserved, "attempt to set max below reserved" );
-
-      auto delta = int64_t(max_ram_size) - int64_t(_gstate.max_ram_size);
-      
-
-      _gstate.max_ram_size = max_ram_size;
-   }
+  
 
    void system_contract::update_ram_supply() {
       auto cbt = current_block_time();
@@ -87,13 +76,6 @@ namespace eosiosystem {
       _gstate2.last_ram_increase = cbt;
    }
 
-  
-   void system_contract::setramrate( uint16_t bytes_per_block ) {
-      require_auth( _self );
-
-      update_ram_supply();
-      _gstate2.new_ram_per_block = bytes_per_block;
-   }
 
    void system_contract::setparams( const eosio::blockchain_parameters& params ) {
       require_auth( _self );
@@ -339,11 +321,11 @@ EOSIO_DISPATCH( eosiosystem::system_contract,
     
      (newaccount)(updateauth)(deleteauth)(linkauth)(unlinkauth)(canceldelay)(onerror)(setabi)
      
-     (setram)(setramrate)(setparams)(setpriv)
+     (setparams)(setpriv)
      (rmvproducer)(updtrevision)(bidname)(bidrefund)
      (setglobal)(updtbwlist)
     
-     (regproducer)(unregprod)(voteproducer)(regproxy)
+     (regproducer)(unregprod)(voteproducer)
      
      (onblock)(claimrewards)(claimbonus)
 )
