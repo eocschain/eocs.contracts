@@ -149,7 +149,7 @@ namespace eosiosystem {
       if( _gstate.total_unpaid_blocks > 0 ) {
          producer_per_block_pay = (_gstate.perblock_bucket * prod.unpaid_blocks) / _gstate.total_unpaid_blocks;
       }
-
+      /*
       double new_votepay_share = update_producer_votepay_share( prod2,
                                     ct,
                                     updated_after_threshold ? 0.0 : prod.total_votes,
@@ -179,7 +179,7 @@ namespace eosiosystem {
       _gstate.total_unpaid_blocks -= prod.unpaid_blocks;
 
       update_total_votepay_share( ct, -new_votepay_share, (updated_after_threshold ? prod.total_votes : 0.0) );
-
+      */
       _producers.modify( prod, same_payer, [&](auto& p) {
          p.last_claim_time = ct;
          p.unpaid_blocks   = 0;
