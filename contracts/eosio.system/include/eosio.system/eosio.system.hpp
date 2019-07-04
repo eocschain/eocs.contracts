@@ -644,36 +644,7 @@ namespace eosiosystem {
           */
          [[eosio::action]]
          void updtbwlist(uint8_t type, const std::vector<std::string>& add, const std::vector<std::string>& rmv);
-        /*
-         using init_action = eosio::action_wrapper<"init"_n, &system_contract::init>;
-         using setacctram_action = eosio::action_wrapper<"setacctram"_n, &system_contract::setacctram>;
-         using setacctnet_action = eosio::action_wrapper<"setacctnet"_n, &system_contract::setacctnet>;
-         using setacctcpu_action = eosio::action_wrapper<"setacctcpu"_n, &system_contract::setacctcpu>;
-         using delegatebw_action = eosio::action_wrapper<"delegatebw"_n, &system_contract::delegatebw>;
-         using deposit_action = eosio::action_wrapper<"deposit"_n, &system_contract::deposit>;
-         using withdraw_action = eosio::action_wrapper<"withdraw"_n, &system_contract::withdraw>;
-         using buyrex_action = eosio::action_wrapper<"buyrex"_n, &system_contract::buyrex>;
-         using unstaketorex_action = eosio::action_wrapper<"unstaketorex"_n, &system_contract::unstaketorex>;
-         using sellrex_action = eosio::action_wrapper<"sellrex"_n, &system_contract::sellrex>;
-         using cnclrexorder_action = eosio::action_wrapper<"cnclrexorder"_n, &system_contract::cnclrexorder>;
-         using rentcpu_action = eosio::action_wrapper<"rentcpu"_n, &system_contract::rentcpu>;
-         using rentnet_action = eosio::action_wrapper<"rentnet"_n, &system_contract::rentnet>;
-         using fundcpuloan_action = eosio::action_wrapper<"fundcpuloan"_n, &system_contract::fundcpuloan>;
-         using fundnetloan_action = eosio::action_wrapper<"fundnetloan"_n, &system_contract::fundnetloan>;
-         using defcpuloan_action = eosio::action_wrapper<"defcpuloan"_n, &system_contract::defcpuloan>;
-         using defnetloan_action = eosio::action_wrapper<"defnetloan"_n, &system_contract::defnetloan>;
-         using updaterex_action = eosio::action_wrapper<"updaterex"_n, &system_contract::updaterex>;
-         using rexexec_action = eosio::action_wrapper<"rexexec"_n, &system_contract::rexexec>;
-         using setrex_action = eosio::action_wrapper<"setrex"_n, &system_contract::setrex>;
-         using mvtosavings_action = eosio::action_wrapper<"mvtosavings"_n, &system_contract::mvtosavings>;
-         using mvfrsavings_action = eosio::action_wrapper<"mvfrsavings"_n, &system_contract::mvfrsavings>;
-         using consolidate_action = eosio::action_wrapper<"consolidate"_n, &system_contract::consolidate>;
-         using closerex_action = eosio::action_wrapper<"closerex"_n, &system_contract::closerex>;
-         using undelegatebw_action = eosio::action_wrapper<"undelegatebw"_n, &system_contract::undelegatebw>;
-         using buyram_action = eosio::action_wrapper<"buyram"_n, &system_contract::buyram>;
-         using buyrambytes_action = eosio::action_wrapper<"buyrambytes"_n, &system_contract::buyrambytes>;
-         using sellram_action = eosio::action_wrapper<"sellram"_n, &system_contract::sellram>;
-         using refund_action = eosio::action_wrapper<"refund"_n, &system_contract::refund>;*/
+        
          using regproducer_action = eosio::action_wrapper<"regproducer"_n, &system_contract::regproducer>;
          using unregprod_action = eosio::action_wrapper<"unregprod"_n, &system_contract::unregprod>;
          using setram_action = eosio::action_wrapper<"setram"_n, &system_contract::setram>;
@@ -686,9 +657,7 @@ namespace eosiosystem {
          using bidname_action = eosio::action_wrapper<"bidname"_n, &system_contract::bidname>;
          using bidrefund_action = eosio::action_wrapper<"bidrefund"_n, &system_contract::bidrefund>;
          using setpriv_action = eosio::action_wrapper<"setpriv"_n, &system_contract::setpriv>;
-         /*using setalimits_action = eosio::action_wrapper<"setalimits"_n, &system_contract::setalimits>;
-         using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
-         using setmrs_action = eosio::action_wrapper<"setmrs"_n, &system_contract::setmrs>;*/
+       
 
       private:
 
@@ -708,47 +677,7 @@ namespace eosiosystem {
          symbol core_symbol()const;
          void update_ram_supply();
 
-         // defined in rex.cpp
-	 /*
-         void runrex( uint16_t max );
-         void update_resource_limits( const name& from, const name& receiver, int64_t delta_net, int64_t delta_cpu );
-         void check_voting_requirement( const name& owner,
-                                        const char* error_msg = "must vote for at least 21 producers or for a proxy before buying REX" )const;
-         rex_order_outcome fill_rex_order( const rex_balance_table::const_iterator& bitr, const asset& rex );
-         asset update_rex_account( const name& owner, const asset& proceeds, const asset& unstake_quant, bool force_vote_update = false );
-         void channel_to_rex( const name& from, const asset& amount );
-         void channel_namebid_to_rex( const int64_t highest_bid );
-         template <typename T>
-         int64_t rent_rex( T& table, const name& from, const name& receiver, const asset& loan_payment, const asset& loan_fund );
-         template <typename T>
-         void fund_rex_loan( T& table, const name& from, uint64_t loan_num, const asset& payment );
-         template <typename T>
-         void defund_rex_loan( T& table, const name& from, uint64_t loan_num, const asset& amount );
-         void transfer_from_fund( const name& owner, const asset& amount );
-         void transfer_to_fund( const name& owner, const asset& amount );
-         bool rex_loans_available()const;
-         bool rex_system_initialized()const { return _rexpool.begin() != _rexpool.end(); }
-         bool rex_available()const { return rex_system_initialized() && _rexpool.begin()->total_rex.amount > 0; }
-         static time_point_sec get_rex_maturity();
-         asset add_to_rex_balance( const name& owner, const asset& payment, const asset& rex_received );
-         asset add_to_rex_pool( const asset& payment );
-         void process_rex_maturities( const rex_balance_table::const_iterator& bitr );
-         void consolidate_rex_balance( const rex_balance_table::const_iterator& bitr,
-                                       const asset& rex_in_sell_order );
-         int64_t read_rex_savings( const rex_balance_table::const_iterator& bitr );
-         void put_rex_savings( const rex_balance_table::const_iterator& bitr, int64_t rex );
-         void update_rex_stake( const name& voter );
-
-         void add_loan_to_rex_pool( const asset& payment, int64_t rented_tokens, bool new_loan );
-         void remove_loan_from_rex_pool( const rex_loan& loan );
-         template <typename Index, typename Iterator>
-         int64_t update_renewed_loan( Index& idx, const Iterator& itr, int64_t rented_tokens );
-
-         // defined in delegate_bandwidth.cpp
-         void changebw( name from, name receiver,
-                        asset stake_net_quantity, asset stake_cpu_quantity, bool transfer );
-         void update_voting_power( const name& voter, const asset& total_update );*/
-
+     
          // defined in voting.hpp
          void update_elected_producers( block_timestamp timestamp );
          void update_votes( const name voter, const name proxy, const std::vector<name>& producers, bool voting );
