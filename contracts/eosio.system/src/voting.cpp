@@ -67,7 +67,6 @@ namespace eosiosystem {
                 info.owner                     = producer;
                 info.last_votepay_share_update = ct;
              });
-             update_total_votepay_share( ct, 0.0, prod->total_votes );
           }
       } else {
           _producers.emplace( producer, [&]( producer_info& info ){

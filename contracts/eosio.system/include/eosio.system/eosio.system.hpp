@@ -19,9 +19,7 @@
 #ifdef CHANNEL_RAM_AND_NAMEBID_FEES_TO_REX
 #undef CHANNEL_RAM_AND_NAMEBID_FEES_TO_REX
 #endif
-// CHANNEL_RAM_AND_NAMEBID_FEES_TO_REX macro determines whether ramfee and namebid proceeds are
-// channeled to REX pool. In order to stop these proceeds from being channeled, the macro must
-// be set to 0.
+
 #define CHANNEL_RAM_AND_NAMEBID_FEES_TO_REX 1
 
 namespace eosiosystem {
@@ -183,17 +181,10 @@ namespace eosiosystem {
       std::vector<name>   producers; /// the producers approved by this voter if no proxy set
       int64_t             staked = 0;
 
-      /**
-       *  Every time a vote is cast we must first "undo" the last vote weight, before casting the
-       *  new vote weight.  Vote weight is calculated as:
-       *
-       *  stated.amount * 2 ^ ( weeks_since_launch/weeks_per_year)
-       */
+     
       double              last_vote_weight = 0; /// the vote weight cast the last time the vote was updated
 
-      /**
-       * Total vote weight delegated to this voter.
-       */
+     
       double              proxied_vote_weight= 0; /// the total vote weight delegated to this voter as a proxy
       bool                is_proxy = 0; /// whether the voter is a proxy for others
 
@@ -238,92 +229,6 @@ namespace eosiosystem {
    typedef eosio::singleton< "global3"_n, eosio_global_state3 > global_state3_singleton;
 
    static constexpr uint32_t     seconds_per_day = 24 * 3600;
-/*
-   struct [[eosio::table,eosio::contract("eosio.system")]] rex_pool {
-      uint8_t    version = 0;
-      asset      total_lent; /// total amount of CORE_SYMBOL in open rex_loans
-      asset      total_unlent; /// total amount of CORE_SYMBOL available to be lent (connector)
-      asset      total_rent; /// fees received in exchange for lent  (connector)
-      asset      total_lendable; /// total amount of CORE_SYMBOL that have been lent (total_unlent + total_lent)
-      asset      total_rex; /// total number of REX shares allocated to contributors to total_lendable
-      asset      namebid_proceeds; /// the amount of CORE_SYMBOL to be transferred from namebids to REX pool
-      uint64_t   loan_num = 0; /// increments with each new loan
-
-      uint64_t primary_key()const { return 0; }
-   };
-
-   typedef eosio::multi_index< "rexpool"_n, rex_pool > rex_pool_table;
-
-   struct [[eosio::table,eosio::contract("eosio.system")]] rex_fund {
-      uint8_t version = 0;
-      name    owner;
-      asset   balance;
-
-      uint64_t primary_key()const { return owner.value; }
-   };
-
-   typedef eosio::multi_index< "rexfund"_n, rex_fund > rex_fund_table;
-
-   struct [[eosio::table,eosio::contract("eosio.system")]] rex_balance {
-      uint8_t version = 0;
-      name    owner;
-      asset   vote_stake; /// the amount of CORE_SYMBOL currently included in owner's vote
-      asset   rex_balance; /// the amount of REX owned by owner
-      int64_t matured_rex = 0; /// matured REX available for selling
-      std::deque<std::pair<time_point_sec, int64_t>> rex_maturities; /// REX daily maturity buckets
-
-      uint64_t primary_key()const { return owner.value; }
-   };
-
-   typedef eosio::multi_index< "rexbal"_n, rex_balance > rex_balance_table;
-
-   struct [[eosio::table,eosio::contract("eosio.system")]] rex_loan {
-      uint8_t             version = 0;
-      name                from;
-      name                receiver;
-      asset               payment;
-      asset               balance;
-      asset               total_staked;
-      uint64_t            loan_num;
-      eosio::time_point   expiration;
-
-      uint64_t primary_key()const { return loan_num;                   }
-      uint64_t by_expr()const     { return expiration.elapsed.count(); }
-      uint64_t by_owner()const    { return from.value;                 }
-   };
-
-   typedef eosio::multi_index< "cpuloan"_n, rex_loan,
-                               indexed_by<"byexpr"_n,  const_mem_fun<rex_loan, uint64_t, &rex_loan::by_expr>>,
-                               indexed_by<"byowner"_n, const_mem_fun<rex_loan, uint64_t, &rex_loan::by_owner>>
-                             > rex_cpu_loan_table;
-
-   typedef eosio::multi_index< "netloan"_n, rex_loan,
-                               indexed_by<"byexpr"_n,  const_mem_fun<rex_loan, uint64_t, &rex_loan::by_expr>>,
-                               indexed_by<"byowner"_n, const_mem_fun<rex_loan, uint64_t, &rex_loan::by_owner>>
-                             > rex_net_loan_table;
-
-   struct [[eosio::table,eosio::contract("eosio.system")]] rex_order {
-      uint8_t             version = 0;
-      name                owner;
-      asset               rex_requested;
-      asset               proceeds;
-      asset               stake_change;
-      eosio::time_point   order_time;
-      bool                is_open = true;
-
-      void close()                { is_open = false;    }
-      uint64_t primary_key()const { return owner.value; }
-      uint64_t by_time()const     { return is_open ? order_time.elapsed.count() : std::numeric_limits<uint64_t>::max(); }
-   };
-
-   typedef eosio::multi_index< "rexqueue"_n, rex_order,
-                               indexed_by<"bytime"_n, const_mem_fun<rex_order, uint64_t, &rex_order::by_time>>> rex_order_table;
-
-   struct rex_order_outcome {
-      bool success;
-      asset proceeds;
-      asset stake_change;
-   };*/
 
    class [[eosio::contract("eosio.system")]] system_contract : public native {
 
@@ -338,11 +243,7 @@ namespace eosiosystem {
          eosio_global_state      _gstate;
          eosio_global_state2     _gstate2;
          eosio_global_state3     _gstate3;
-         /*rammarket               _rammarket;
-         rex_pool_table          _rexpool;
-         rex_fund_table          _rexfunds;
-         rex_balance_table       _rexbalance;
-         rex_order_table         _rexorders;*/
+       
 
       public:
          static constexpr eosio::name active_permission{"active"_n};
@@ -362,216 +263,10 @@ namespace eosiosystem {
 
          system_contract( name s, name code, datastream<const char*> ds );
          ~system_contract();
-	 /*
-         static symbol get_core_symbol( name system_account = "eosio"_n ) {
-            rammarket rm(system_account, system_account.value);
-            const static auto sym = get_core_symbol( rm );
-            return sym;
-         }
-
-         // Actions:
-         [[eosio::action]]
-         void init( unsigned_int version, symbol core );*/
+	
          [[eosio::action]]
          void onblock( ignore<block_header> header );
-        /*
-         [[eosio::action]]
-         void setalimits( name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
-
-         [[eosio::action]]
-         void setacctram( name account, std::optional<int64_t> ram_bytes );
-
-         [[eosio::action]]
-         void setacctnet( name account, std::optional<int64_t> net_weight );
-
-         [[eosio::action]]
-         void setacctcpu( name account, std::optional<int64_t> cpu_weight );*/
-
-         // functions defined in delegate_bandwidth.cpp
-
-         /**
-          *  Stakes SYS from the balance of 'from' for the benfit of 'receiver'.
-          *  If transfer == true, then 'receiver' can unstake to their account
-          *  Else 'from' can unstake at any time.
-          
-         [[eosio::action]]
-         void delegatebw( name from, name receiver,
-                          asset stake_net_quantity, asset stake_cpu_quantity, bool transfer );*/
-
-         /**
-          * Sets total_rent balance of REX pool to the passed value
-          
-         [[eosio::action]]
-         void setrex( const asset& balance );*/
-
-         /**
-          * Deposits core tokens to user REX fund. All proceeds and expenses related to REX are added to
-          * or taken out of this fund. Inline token transfer from user balance is executed.
-          
-         [[eosio::action]]
-         void deposit( const name& owner, const asset& amount );*/
-
-         /**
-          * Withdraws core tokens from user REX fund. Inline token transfer to user balance is
-          * executed.
-          
-         [[eosio::action]]
-         void withdraw( const name& owner, const asset& amount );*/
-
-         /**
-          * Transfers core tokens from user REX fund and converts them to REX stake.
-          * A voting requirement must be satisfied before action can be executed.
-          * User votes are updated following this action.
-          
-         [[eosio::action]]
-         void buyrex( const name& from, const asset& amount );*/
-
-         /**
-          * Use staked core tokens to buy REX.
-          * A voting requirement must be satisfied before action can be executed.
-          * User votes are updated following this action.
-          *
-         [[eosio::action]]
-         void unstaketorex( const name& owner, const name& receiver, const asset& from_net, const asset& from_cpu );*/
-
-         /**
-          * Converts REX stake back into core tokens at current exchange rate. If order cannot be
-          * processed, it gets queued until there is enough in REX pool to fill order.
-          * If successful, user votes are updated.
-          *
-         [[eosio::action]]
-         void sellrex( const name& from, const asset& rex );*/
-
-         /**
-          * Cancels queued sellrex order. Order cannot be cancelled once it's been filled.
-          *
-         [[eosio::action]]
-         void cnclrexorder( const name& owner );*/
-
-         /**
-          * Use payment to rent as many SYS tokens as possible and stake them for either CPU or NET for the
-          * benefit of receiver, after 30 days the rented SYS delegation of CPU or NET will expire unless loan
-          * balance is larger than or equal to payment.
-          *
-          * If loan has enough balance, it gets renewed at current market price, otherwise, it is closed and
-          * remaining balance is refunded to loan owner.
-          *
-          * Owner can fund or defund a loan at any time before its expiration.
-          *
-          * All loan expenses and refunds come out of or are added to owner's REX fund.
-          *
-         [[eosio::action]]
-         void rentcpu( const name& from, const name& receiver, const asset& loan_payment, const asset& loan_fund );
-         [[eosio::action]]
-         void rentnet( const name& from, const name& receiver, const asset& loan_payment, const asset& loan_fund );*/
-
-         /**
-          * Loan owner funds a given CPU or NET loan.
-          *
-         [[eosio::action]]
-         void fundcpuloan( const name& from, uint64_t loan_num, const asset& payment );
-         [[eosio::action]]
-         void fundnetloan( const name& from, uint64_t loan_num, const asset& payment );*/
-         /**
-          * Loan owner defunds a given CPU or NET loan.
-          *
-         [[eosio::action]]
-         void defcpuloan( const name& from, uint64_t loan_num, const asset& amount );
-         [[eosio::action]]
-         void defnetloan( const name& from, uint64_t loan_num, const asset& amount );*/
-
-         /**
-          * Updates REX vote stake of owner to its current value.
-          *
-         [[eosio::action]]
-         void updaterex( const name& owner );*/
-
-         /**
-          * Processes max CPU loans, max NET loans, and max queued sellrex orders.
-          * Action does not execute anything related to a specific user.
-          *
-         [[eosio::action]]
-         void rexexec( const name& user, uint16_t max );*/
-
-         /**
-          * Consolidate REX maturity buckets into one that can be sold only 4 days
-          * from the end of today.
-          *
-         [[eosio::action]]
-         void consolidate( const name& owner );*/
-
-         /**
-          * Moves a specified amount of REX into savings bucket. REX savings bucket
-          * never matures. In order for it to be sold, it has to be moved explicitly
-          * out of that bucket. Then the moved amount will have the regular maturity
-          * period of 4 days starting from the end of the day.
-          *
-         [[eosio::action]]
-         void mvtosavings( const name& owner, const asset& rex );*/
-         
-         /**
-          * Moves a specified amount of REX out of savings bucket. The moved amount
-          * will have the regular REX maturity period of 4 days.
-          *
-         [[eosio::action]]
-         void mvfrsavings( const name& owner, const asset& rex );*/
-
-         /**
-          * Deletes owner records from REX tables and frees used RAM.
-          * Owner must not have an outstanding REX balance.
-          *
-         [[eosio::action]]
-         void closerex( const name& owner );*/
-
-         /**
-          *  Decreases the total tokens delegated by from to receiver and/or
-          *  frees the memory associated with the delegation if there is nothing
-          *  left to delegate.
-          *
-          *  This will cause an immediate reduction in net/cpu bandwidth of the
-          *  receiver.
-          *
-          *  A transaction is scheduled to send the tokens back to 'from' after
-          *  the staking period has passed. If existing transaction is scheduled, it
-          *  will be canceled and a new transaction issued that has the combined
-          *  undelegated amount.
-          *
-          *  The 'from' account loses voting power as a result of this call and
-          *  all producer tallies are updated.
-          *
-         [[eosio::action]]
-         void undelegatebw( name from, name receiver,
-                            asset unstake_net_quantity, asset unstake_cpu_quantity );*/
-
-
-         /**
-          * Increases receiver's ram quota based upon current price and quantity of
-          * tokens provided. An inline transfer from receiver to system contract of
-          * tokens will be executed.
-          *
-         [[eosio::action]]
-         void buyram( name payer, name receiver, asset quant );
-         [[eosio::action]]
-         void buyrambytes( name payer, name receiver, uint32_t bytes );*/
-
-         /**
-          *  Reduces quota my bytes and then performs an inline transfer of tokens
-          *  to receiver based upon the average purchase price of the original quota.
-          *
-         [[eosio::action]]
-         void sellram( name account, int64_t bytes );*/
-
-         /**
-          *  This action is called after the delegation-period to claim all pending
-          *  unstaked tokens belonging to owner
-          *
-         [[eosio::action]]
-         void refund( name owner );*/
-
-         // functions defined in voting.cpp
-
-         // [[eosio::action]]
-         // void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location );
+       
          [[eosio::action]]
          void regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location , const name regaccount);
 
@@ -620,28 +315,6 @@ namespace eosiosystem {
          [[eosio::action]]
          void setglobal( std::string name, std::string value );
 
-         /**
-          * Set Minimal Resource Security (MRS) parameters.
-          * @param cpu_us
-          * @param net_bytes
-          * @param ram_bytes
-          *
-         [[eosio::action]]
-         void setmrs(int64_t cpu_us, int64_t net_bytes, int64_t ram_bytes);*/
-
-         /**
-          * Update black & white list
-          * @param type: target type.
-          *              0: sender_bypass_whiteblacklist
-          *              1: actor_whitelist
-          *              2: actor_blacklist
-          *              3: contract_whitelist
-          *              4: contract_blacklist
-          *              5: action_blacklist (item must be formatted as <contract>:<action>)
-          *              6: key_blacklist (item must be public key)
-          * @param add: items to add
-          * @param rmv: items to remove
-          */
          [[eosio::action]]
          void updtbwlist(uint8_t type, const std::vector<std::string>& add, const std::vector<std::string>& rmv);
         
@@ -662,13 +335,7 @@ namespace eosiosystem {
       private:
 
          // Implementation details:
-	 /*
-         static symbol get_core_symbol( const rammarket& rm ) {
-            auto itr = rm.find(ramcore_symbol.raw());
-            check(itr != rm.end(), "system contract must first be initialized");
-            return itr->quote.balance.symbol;
-         }*/
-
+	
          //defined in eosio.system.cpp
          static eosio_global_state get_default_parameters();
          static time_point current_time_point();
@@ -683,9 +350,6 @@ namespace eosiosystem {
          void update_votes( const name voter, const name proxy, const std::vector<name>& producers, bool voting );
          void propagate_weight_change( const voter_info& voter );
          
-         double update_total_votepay_share( time_point ct,
-                                            double additional_shares_delta = 0.0, double shares_rate_delta = 0.0 );
-
          template <auto system_contract::*...Ptrs>
          class registration {
             public:
@@ -716,7 +380,7 @@ namespace eosiosystem {
                system_contract* this_contract;
          };
 
-         //registration<&system_contract::update_rex_stake> vote_stake_updater{ this };
+        
    };
 
 } /// eosiosystem
