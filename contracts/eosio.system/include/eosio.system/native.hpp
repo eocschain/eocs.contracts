@@ -96,12 +96,7 @@ namespace eosiosystem {
           *     therefore, this method will execute an inline buyram from receiver for newacnt in
           *     an amount equal to the current new account creation fee.
           */
-         [[eosio::action]]
-         void newaccount( name             creator,
-                          name             name,
-                          ignore<authority> owner,
-                          ignore<authority> active);
-
+      
 
          [[eosio::action]]
          void updateauth(  ignore<name>  account,
@@ -136,7 +131,6 @@ namespace eosiosystem {
          [[eosio::action]]
          void setcode( name account, uint8_t vmtype, uint8_t vmversion, const std::vector<char>& code ) {}
 
-         using newaccount_action = eosio::action_wrapper<"newaccount"_n, &native::newaccount>;
          using updateauth_action = eosio::action_wrapper<"updateauth"_n, &native::updateauth>;
          using deleteauth_action = eosio::action_wrapper<"deleteauth"_n, &native::deleteauth>;
          using linkauth_action = eosio::action_wrapper<"linkauth"_n, &native::linkauth>;
