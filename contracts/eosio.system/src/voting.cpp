@@ -23,7 +23,7 @@ namespace eosiosystem {
    using eosio::singleton;
    using eosio::transaction;
    using eosio::print;
-   using eosio::same_payer
+   using eosio::same_payer;
   
    void system_contract::regproducer( const name producer, const public_key& producer_key, const std::string& url, uint16_t location , const name regaccount){
        check( url.size() < 512, "url too long" );

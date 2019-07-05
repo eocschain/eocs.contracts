@@ -63,19 +63,7 @@ namespace eosiosystem {
 
   
 
-   void system_contract::update_ram_supply() {
-      auto cbt = current_block_time();
-
-      if( cbt <= _gstate2.last_ram_increase ) return;
-
-     
-      auto new_ram = (cbt.slot - _gstate2.last_ram_increase.slot)*_gstate2.new_ram_per_block;
-      _gstate.max_ram_size += new_ram;
-
-     
-      _gstate2.last_ram_increase = cbt;
-   }
-
+   
 
    void system_contract::setparams( const eosio::blockchain_parameters& params ) {
       require_auth( _self );
