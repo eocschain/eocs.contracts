@@ -285,11 +285,7 @@ namespace eosiosystem {
          void setparams( const eosio::blockchain_parameters& params );
 
          // functions defined in producer_pay.cpp
-         [[eosio::action]]
-         void claimrewards( const name owner );
-
-         [[eosio::action]]
-         void claimbonus( const name owner );
+        
 
          [[eosio::action]]
          void setpriv( name account, uint8_t is_priv );
@@ -300,11 +296,7 @@ namespace eosiosystem {
          [[eosio::action]]
          void updtrevision( uint8_t revision );
 
-         [[eosio::action]]
-         void bidname( name bidder, name newname, asset bid );
-
-         [[eosio::action]]
-         void bidrefund( name bidder, name newname );
+        
 
          [[eosio::action]]
          void setglobal( std::string name, std::string value );
@@ -315,7 +307,7 @@ namespace eosiosystem {
          using regproducer_action = eosio::action_wrapper<"regproducer"_n, &system_contract::regproducer>;
          using unregprod_action = eosio::action_wrapper<"unregprod"_n, &system_contract::unregprod>;
          using voteproducer_action = eosio::action_wrapper<"voteproducer"_n, &system_contract::voteproducer>;
-         using claimrewards_action = eosio::action_wrapper<"claimrewards"_n, &system_contract::claimrewards>;
+        
          using rmvproducer_action = eosio::action_wrapper<"rmvproducer"_n, &system_contract::rmvproducer>;
          using updtrevision_action = eosio::action_wrapper<"updtrevision"_n, &system_contract::updtrevision>;
          using bidname_action = eosio::action_wrapper<"bidname"_n, &system_contract::bidname>;
@@ -333,13 +325,11 @@ namespace eosiosystem {
          static time_point_sec current_time_point_sec();
          static block_timestamp current_block_time();
          symbol core_symbol()const;
-         void update_ram_supply();
-
+         
      
          // defined in voting.hpp
          void update_elected_producers( block_timestamp timestamp );
          void update_votes( const name voter, const name proxy, const std::vector<name>& producers, bool voting );
-         void propagate_weight_change( const voter_info& voter );
          
          template <auto system_contract::*...Ptrs>
          class registration {
